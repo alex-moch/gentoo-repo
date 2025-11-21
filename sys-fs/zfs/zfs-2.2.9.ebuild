@@ -10,7 +10,7 @@ EAPI=8
 
 DISTUTILS_OPTIONAL=1
 DISTUTILS_USE_PEP517=setuptools
-PYTHON_COMPAT=( python3_{10..13} )
+PYTHON_COMPAT=( python3_{11..13} )
 
 inherit autotools bash-completion-r1 dist-kernel-utils distutils-r1 flag-o-matic linux-info pam systemd udev usr-ldscript
 
@@ -112,6 +112,7 @@ RESTRICT="test"
 PATCHES=(
 	"${FILESDIR}"/2.1.5-dracut-zfs-missing.patch
 	"${FILESDIR}"/2.3.4-musl.patch
+	"${FILESDIR}"/2.2.9-nfs-truncate-shares.patch
 )
 
 pkg_pretend() {
