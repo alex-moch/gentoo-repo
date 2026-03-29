@@ -3,7 +3,7 @@
 
 EAPI=8
 
-inherit linux-mod-r1 udev
+inherit linux-mod-r1
 
 COMMIT="316e75e8db2505d66179cb8911a0bcaf5919610b"
 
@@ -29,40 +29,22 @@ src_compile() {
 		vmmon=misc:vmmon-only
 		vmnet=misc:vmnet-only
 	)
+
 	linux-mod-r1_src_compile
 }
 
 src_install() {
 	linux-mod-r1_src_install
 
-	local udevrules="${T}/60-vmware.rules"
-	cat > "${udevrules}" <<-EOF
-		KERNEL=="vmci",     GROUP="vmware", MODE="0660"
-		KERNEL=="vmw_vmci", GROUP="vmware", MODE="0660"
-		KERNEL=="vmmon",    GROUP="vmware", MODE="0660"
-		KERNEL=="vsock",    GROUP="vmware", MODE="0660"
-	EOF
-	udev_dorules "${udevrules}"
-
-	insinto /etc/modprobe.d
-	newins - vmware.conf <<-EOF
-		# Map VMware module aliases to in-kernel modules
-		alias vmci vmw_vmci
-		alias vsock vmw_vsock_vmci_transport
-	EOF
-
 	insinto /usr/lib/modules-load.d
-	newins - vmware.conf <<-EOF
+	newins - vmware.conf <<-EOF || die
 		vmmon
 		vmnet
+		vmw_vmci
+		vmw_vsock_vmci_transport
 	EOF
 }
 
 pkg_postinst() {
 	linux-mod-r1_pkg_postinst
-	udev_reload
-}
-
-pkg_postrm() {
-	udev_reload
 }
