@@ -5,7 +5,7 @@ EAPI=8
 
 PYTHON_COMPAT=( python3_{13..14} )
 
-inherit edo pam python-any-r1 readme.gentoo-r1 systemd xdg
+inherit desktop edo pam python-any-r1 readme.gentoo-r1 systemd xdg
 
 # Version layout: 25.2.1.25219725 → 25H2u1 build 25219725
 MY_YEAR=$(ver_cut 1)
@@ -21,7 +21,7 @@ MY_P="${MY_PN}-${MY_RELEASE}-${PV_BUILD}"
 PV_MODULES="$(ver_cut 1-2)"
 
 VMWARE_FUSION_VER="13.6.3/24585314"
-SYSTEMD_UNITS_TAG="gentoo-02"
+SYSTEMD_COMMIT="1f4952c6200459672f874c0c222e5f18a9f10c48"
 UNLOCKER_VERSION="3.1.3"
 
 VM_INSTALL_DIR="/opt/vmware"
@@ -36,8 +36,8 @@ SRC_URI="
 		https://packages-prod.broadcom.com/tools/frozen/darwin/darwin.iso
 	)
 	systemd? (
-		https://github.com/akhuettel/systemd-vmware/archive/${SYSTEMD_UNITS_TAG}.tar.gz
-			-> vmware-systemd-${SYSTEMD_UNITS_TAG}.tgz
+		https://github.com/alex-moch/vmware-systemd/archive/${SYSTEMD_COMMIT}.tar.gz
+			-> vmware-systemd-${SYSTEMD_COMMIT}.tgz
 	)
 "
 S="${WORKDIR}/extracted"
@@ -94,14 +94,6 @@ BDEPEND="
 	app-arch/unzip
 "
 
-QA_PREBUILT="/opt/*"
-QA_WX_LOAD="
-	opt/vmware/lib/vmware/tools-upgraders/vmware-tools-upgrader-32
-	opt/vmware/lib/vmware/bin/vmware-vmx
-	opt/vmware/lib/vmware/bin/vmware-vmx-debug
-	opt/vmware/lib/vmware/bin/vmware-vmx-stats
-	opt/vmware/lib/vmware/lib/libvmware-gksu.so/libvmware-gksu.so
-"
 QA_TEXTRELS="opt/vmware/lib/vmware/bin/vmware-vmx*"
 
 # Map lowercase USE_EXPAND values to VMware's directory names
@@ -196,7 +188,7 @@ src_install() {
 
 	dobin \
 		vmware-vmx/bin/vmnet-{bridge,dhcpd,natd,netifup,sniffer} \
-		vmware-vmx/bin/vmware-{collect-host-support-info,gksu,modconfig,networks,ping} \
+		vmware-vmx/bin/vmware-{collect-host-support-info,gksu,networks,ping} \
 		vmware-workstation/bin/{vmss2core,vmware,vmware-tray,vmware-vdiskmanager} \
 		vmware-vprobe/bin/vmware-vprobe \
 		vmware-player-app/bin/vmware-license-{check,enter}.sh \
@@ -240,6 +232,11 @@ src_install() {
 	fperms 0755 ${VM_INSTALL_DIR}/lib/vmware-installer/"${vmware_installer_version}"/{vmis-launcher,cdsHelper,vmware-installer}
 	dosym ../lib/vmware-installer/"${vmware_installer_version}"/vmware-installer \
 		${VM_INSTALL_DIR}/bin/vmware-installer
+
+	rm -f \
+		"${ED}${VM_INSTALL_DIR}/lib/vmware-installer/${vmware_installer_version}/python/lib/lib-dynload/_bz2.cpython-310-x86_64-linux-gnu.so" \
+		"${ED}${VM_INSTALL_DIR}/lib/vmware-installer/${vmware_installer_version}/python/lib/lib-dynload/_gdbm.cpython-310-x86_64-linux-gnu.so" \
+		"${ED}${VM_INSTALL_DIR}/lib/vmware-installer/${vmware_installer_version}/python/lib/lib-dynload/"*_failed.so || die
 
 	insinto /etc/vmware-installer
 	doins vmware-installer/bootstrap
@@ -316,9 +313,8 @@ src_install() {
 	# --- Documentation ---
 	#
 
-	insinto /usr/share/doc/vmware-workstation
-	doins vmware-workstation/doc/EULA
-	docompress -x /usr/share/doc/vmware-workstation
+	docompress -x /usr/share/doc/${PF}
+	dodoc vmware-workstation/doc/EULA
 
 	# OVFTool EULA is always needed
 	insinto /usr/lib/vmware-ovftool
@@ -467,9 +463,10 @@ src_install() {
 	#
 
 	if use systemd; then
+		local sd="${WORKDIR}/vmware-systemd-${SYSTEMD_COMMIT}"
 		systemd_dounit \
-			"${WORKDIR}"/systemd-vmware-"${SYSTEMD_UNITS_TAG}"/vmware-{authentication,usb,vmblock,vmci,vmmon,vmnet,vmsock}.service \
-			vmware.target
+			"${sd}"/vmware-{authentication,usb,vmblock,vmci,vmmon,vmnet,vmsock}.service \
+			"${sd}"/vmware.target
 	fi
 
 	#
