@@ -404,7 +404,6 @@ src_install() {
 		PATH="${VM_INSTALL_DIR}/bin"
 		ROOTPATH="${VM_INSTALL_DIR}/bin"
 		CONFIG_PROTECT_MASK="/etc/vmware-installer"
-		VMWARE_USE_SHIPPED_LIBS=1
 	EOF
 	doenvd "${T}"/90vmware
 
