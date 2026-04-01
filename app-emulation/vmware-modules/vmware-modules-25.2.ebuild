@@ -35,14 +35,6 @@ src_compile() {
 
 src_install() {
 	linux-mod-r1_src_install
-
-	insinto /usr/lib/modules-load.d
-	newins - vmware.conf <<-EOF || die
-		vmmon
-		vmnet
-		vmw_vmci
-		vmw_vsock_vmci_transport
-	EOF
 }
 
 pkg_postinst() {
