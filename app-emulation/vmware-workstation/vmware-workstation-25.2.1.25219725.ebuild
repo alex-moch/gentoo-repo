@@ -521,7 +521,6 @@ src_install() {
 		systemd_dounit \
 			"${sd}/vmware-authentication.service" \
 			"${sd}/vmware-usb.service" \
-			"${sd}/vmware-vmblock.service" \
 			"${sd}/vmware-vmci.service" \
 			"${sd}/vmware-vmmon.service" \
 			"${sd}/vmware-vmnet.service" \
