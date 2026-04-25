@@ -1,1 +1,2 @@
 app-admin/sudo-rs su system-names
+sys-apps/util-linux -su
