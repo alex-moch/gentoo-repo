@@ -1,1 +1,2 @@
 app-admin/sudo-rs ~amd64 ~arm64
+app-misc/zellij ~amd64
