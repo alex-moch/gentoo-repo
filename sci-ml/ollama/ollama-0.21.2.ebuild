@@ -31,7 +31,6 @@ LICENSE="MIT"
 SLOT="0"
 
 IUSE="cuda rocm vulkan"
-# IUSE+=" opencl"
 
 BLAS_BACKENDS="blis mkl openblas"
 BLAS_REQUIRED_USE="blas? ( ?? ( ${BLAS_BACKENDS} ) )"
@@ -112,24 +111,6 @@ PATCHES=(
 	"${FILESDIR}/${PN}-0.18.0-make-installing-runtime-deps-optional.patch"
 )
 
-pkg_pretend() {
-	if use amd64; then
-		if use cpu_flags_x86_f16c && use cpu_flags_x86_avx2 && use cpu_flags_x86_fma3 && ! use cpu_flags_x86_bmi2; then
-			ewarn
-			ewarn "CPU_FLAGS_X86: bmi2 not enabled."
-			ewarn "  Not building haswell runner."
-			ewarn "  Not building skylakex runner."
-			ewarn "  Not building icelake runner."
-			ewarn "  Not building alderlake runner."
-			ewarn
-			if grep bmi2 /proc/cpuinfo > /dev/null; then
-				ewarn "bmi2 found in /proc/cpuinfo"
-				ewarn
-			fi
-		fi
-	fi
-}
-
 pkg_setup() {
 	if use rocm; then
 		linux-info_pkg_setup
@@ -161,10 +142,6 @@ src_unpack() {
 src_prepare() {
 	cmake_src_prepare
 
-	sed \
-		-e "/set(GGML_CCACHE/s/ON/OFF/g" \
-		-i CMakeLists.txt || die "Disable CCACHE sed failed"
-
 	# TODO see src_unpack?
 	sed \
 		-e "s/ -O3//g" \
@@ -182,64 +159,29 @@ src_prepare() {
 		|| die "libdir sed failed"
 
 	if use amd64; then
-		if
-			! use cpu_flags_x86_sse4_2; then
-			sed -e "/ggml_add_cpu_backend_variant(sse42/s/^/# /g" -i ml/backend/ggml/ggml/src/CMakeLists.txt || die
-			# SSE42)
-		fi
-		if
-			! use cpu_flags_x86_sse4_2 ||
-			! use cpu_flags_x86_avx; then
-			sed -e "/ggml_add_cpu_backend_variant(sandybridge/s/^/# /g" -i ml/backend/ggml/ggml/src/CMakeLists.txt || die
-			# SSE42 AVX)
-		fi
-		if
-			! use cpu_flags_x86_sse4_2 ||
-			! use cpu_flags_x86_avx ||
-			! use cpu_flags_x86_f16c ||
-			! use cpu_flags_x86_avx2 ||
-			! use cpu_flags_x86_bmi2 ||
-			! use cpu_flags_x86_fma3; then
-			sed -e "/ggml_add_cpu_backend_variant(haswell/s/^/# /g" -i ml/backend/ggml/ggml/src/CMakeLists.txt || die
-			# SSE42 AVX F16C AVX2 BMI2 FMA)
-		fi
-		if
-			! use cpu_flags_x86_sse4_2 ||
-			! use cpu_flags_x86_avx ||
-			! use cpu_flags_x86_f16c ||
-			! use cpu_flags_x86_avx2 ||
-			! use cpu_flags_x86_bmi2 ||
-			! use cpu_flags_x86_fma3 ||
-			! use cpu_flags_x86_avx512f; then
-			sed -e "/ggml_add_cpu_backend_variant(skylakex/s/^/# /g" -i ml/backend/ggml/ggml/src/CMakeLists.txt ||  die
-			# SSE42 AVX F16C AVX2 BMI2 FMA AVX512)
-		fi
-		if
-			! use cpu_flags_x86_sse4_2 ||
-			! use cpu_flags_x86_avx ||
-			! use cpu_flags_x86_f16c ||
-			! use cpu_flags_x86_avx2 ||
-			! use cpu_flags_x86_bmi2 ||
-			! use cpu_flags_x86_fma3 ||
-			! use cpu_flags_x86_avx512f ||
-			! use cpu_flags_x86_avx512vbmi ||
-			! use cpu_flags_x86_avx512_vnni; then
-			sed -e "/ggml_add_cpu_backend_variant(icelake/s/^/# /g" -i ml/backend/ggml/ggml/src/CMakeLists.txt || die
-			# SSE42 AVX F16C AVX2 BMI2 FMA AVX512 AVX512_VBMI AVX512_VNNI)
-		fi
-		if
-			! use cpu_flags_x86_sse4_2 ||
-			! use cpu_flags_x86_avx ||
-			! use cpu_flags_x86_f16c ||
-			! use cpu_flags_x86_avx2 ||
-			! use cpu_flags_x86_bmi2 ||
-			! use cpu_flags_x86_fma3 ||
-			! use cpu_flags_x86_avx_vnni; then
-			sed -e "/ggml_add_cpu_backend_variant(alderlake/s/^/# /g" -i ml/backend/ggml/ggml/src/CMakeLists.txt || die
-			# SSE42 AVX F16C AVX2 BMI2 FMA AVX_VNNI)
-		fi
+		# Map each ggml CPU backend variant to the cpu_flags_x86_* USE flags
+		# it requires. Variants whose required flags are not all enabled get
+		# commented out in the upstream CMakeLists.
+		local -A ggml_variants=(
+			[sse42]="sse4_2"
+			[sandybridge]="sse4_2 avx"
+			[haswell]="sse4_2 avx f16c avx2 bmi2 fma3"
+			[skylakex]="sse4_2 avx f16c avx2 bmi2 fma3 avx512f"
+			[icelake]="sse4_2 avx f16c avx2 bmi2 fma3 avx512f avx512vbmi avx512_vnni"
+			[alderlake]="sse4_2 avx f16c avx2 bmi2 fma3 avx_vnni"
+		)
 
-		# ml/backend/ggml/ggml/src/CMakeLists.txt
+		local variant flag have_all
+		for variant in "${!ggml_variants[@]}"; do
+			have_all=1
+			for flag in ${ggml_variants[${variant}]}; do
+				use "cpu_flags_x86_${flag}" || { have_all=0; break; }
+			done
+			if [[ ${have_all} -eq 0 ]]; then
+				sed -e "/ggml_add_cpu_backend_variant(${variant}/s/^/# /g" \
+					-i ml/backend/ggml/ggml/src/CMakeLists.txt || die
+			fi
+		done
 	fi
 
 	if use cuda; then
@@ -302,10 +244,6 @@ src_configure() {
 			mycmakeargs+=(
 				-DGGML_BLAS_VENDOR="Intel10_64lp"
 			)
-		# elif use nvhpc ; then
-		# 	mycmakeargs+=(
-		# 		-DGGML_BLAS_VENDOR="NVHPC"
-		# 	)
 		elif use openblas ; then
 			mycmakeargs+=(
 				-DGGML_BLAS_VENDOR="OpenBLAS"

@@ -1,6 +1,7 @@
 [Unit]
 Description=Ollama Service
 After=network-online.target
+Wants=network-online.target
 
 [Service]
 ExecStart=/usr/bin/ollama serve
@@ -8,7 +9,20 @@ User=ollama
 Group=ollama
 Restart=always
 RestartSec=3
-Environment="PATH=$PATH"
+
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+LockPersonality=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+ReadWritePaths=/var/lib/ollama /var/log/ollama
 
 [Install]
 WantedBy=multi-user.target
