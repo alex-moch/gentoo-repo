@@ -8,7 +8,7 @@
 	<use>
 		<flag name="static">Install the statically-linked musl build of
 			the daemon and CLI in place of the dynamically-linked
-			binaries shipped in the Arch package</flag>
+			binaries shipped in the Arch Linux package</flag>
 	</use>
 	<upstream>
 		<doc>https://obdev.at/products/littlesnitch-linux/index.html</doc>
