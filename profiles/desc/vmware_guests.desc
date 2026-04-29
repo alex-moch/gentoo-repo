@@ -1,0 +1,15 @@
+# Copyright 2026 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+# This file contains descriptions of VMWARE_GUESTS USE_EXPAND flags.
+
+# Keep it sorted.
+
+darwin - VMWARE_GUESTS setting to install VMware Tools for macOS guests
+linux - VMWARE_GUESTS setting to install VMware Tools for Linux guests
+linuxpreglibc25 - VMWARE_GUESTS setting to install VMware Tools for Linux guests with glibc older than 2.5
+netware - VMWARE_GUESTS setting to install VMware Tools for NetWare guests
+solaris - VMWARE_GUESTS setting to install VMware Tools for Solaris guests
+windows - VMWARE_GUESTS setting to install VMware Tools for Windows guests
+winpre2k - VMWARE_GUESTS setting to install VMware Tools for pre-Windows-2000 guests
+winprevista - VMWARE_GUESTS setting to install VMware Tools for pre-Windows-Vista guests

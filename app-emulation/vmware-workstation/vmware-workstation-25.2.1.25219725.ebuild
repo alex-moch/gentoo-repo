@@ -45,14 +45,13 @@ LICENSE="GPL-2 GPL-3 MIT-with-advertising vmware"
 SLOT="0"
 KEYWORDS="~amd64"
 IUSE="doc macos-guests +modules ovftool systemd vix"
-REQUIRED_USE="vmware_guests_darwin? ( macos-guests )"
-
-RESTRICT="fetch mirror strip"
-
 IUSE+="
 	$(printf 'vmware_guests_%s ' \
 		darwin linux linuxpreglibc25 netware solaris windows winpre2k winprevista)
 "
+REQUIRED_USE="vmware_guests_darwin? ( macos-guests )"
+
+RESTRICT="fetch mirror strip"
 
 RDEPEND="
 	dev-db/sqlite:3
@@ -82,7 +81,6 @@ RDEPEND="
 	x11-libs/xcb-util
 	x11-themes/hicolor-icon-theme
 	modules? ( ~app-emulation/vmware-modules-${PV_MODULES} )
-	ovftool? ( !dev-util/ovftool )
 "
 BDEPEND="
 	${PYTHON_DEPS}
@@ -263,14 +261,15 @@ src_install() {
 	doins -r vmware-installer/{cdsHelper,vmis,vmis-launcher,vmware-cds-helper,vmware-installer,vmware-installer.py,python}
 	[[ -d vmware-installer/sopython ]] && doins -r vmware-installer/sopython
 
+	local lib_dynload="${ED}${VM_INSTALL_DIR}/lib/vmware-installer/${vmware_installer_version}/python/lib/lib-dynload"
 	rm -f \
-		"${ED}${VM_INSTALL_DIR}/lib/vmware-installer/${vmware_installer_version}/python/lib/lib-dynload/_bz2.cpython-310-x86_64-linux-gnu.so" \
-		"${ED}${VM_INSTALL_DIR}/lib/vmware-installer/${vmware_installer_version}/python/lib/lib-dynload/_gdbm.cpython-310-x86_64-linux-gnu.so" \
-		"${ED}${VM_INSTALL_DIR}/lib/vmware-installer/${vmware_installer_version}/python/lib/lib-dynload/"*_failed.so || die
+		"${lib_dynload}/_bz2.cpython-310-x86_64-linux-gnu.so" \
+		"${lib_dynload}/_gdbm.cpython-310-x86_64-linux-gnu.so" \
+		"${lib_dynload}/"*_failed.so || die
 
-	if compgen -G "${ED}${VM_INSTALL_DIR}/lib/vmware-installer/${vmware_installer_version}/python/lib/lib-dynload/*.so" >/dev/null; then
+	if compgen -G "${lib_dynload}/*.so" >/dev/null; then
 		chrpath -k -r '/../lib:$ORIGIN/../lib' \
-			"${ED}${VM_INSTALL_DIR}/lib/vmware-installer/${vmware_installer_version}/python/lib/lib-dynload/"*.so \
+			"${lib_dynload}/"*.so \
 			>/dev/null || die "chrpath for lib-dynload failed"
 	fi
 
@@ -279,7 +278,7 @@ src_install() {
 		"${VM_INSTALL_DIR}/lib/vmware-installer/${vmware_installer_version}/cdsHelper" \
 		"${VM_INSTALL_DIR}/lib/vmware-installer/${vmware_installer_version}/vmware-installer"
 
-	dosym /opt/vmware/lib/vmware-installer/"${vmware_installer_version}"/vmware-installer \
+	dosym ../lib/vmware-installer/"${vmware_installer_version}"/vmware-installer \
 		${VM_INSTALL_DIR}/bin/vmware-installer
 
 	insinto /etc/vmware-installer
@@ -371,7 +370,7 @@ src_install() {
 		doins -r vmware-vix-core/lib/.
 		doins -r vmware-vix-lib-Workstation"$(ver_cut 1)"00/lib/.
 
-		dosym /opt/vmware/lib/vmware-vix/libvixAllProducts.so ${VM_INSTALL_DIR}/lib/libvixAllProducts.so
+		dosym vmware-vix/libvixAllProducts.so ${VM_INSTALL_DIR}/lib/libvixAllProducts.so
 
 		insinto /usr/include/vmware-vix
 		doins vmware-vix-core/include/vix.h
@@ -390,7 +389,7 @@ src_install() {
 		sed -i 's/readlink/readlink -f/' \
 			"${ED}${VM_INSTALL_DIR}/lib/vmware-ovftool/ovftool" || die
 
-		dosym /opt/vmware/lib/vmware-ovftool/ovftool ${VM_INSTALL_DIR}/bin/ovftool
+		dosym ../lib/vmware-ovftool/ovftool ${VM_INSTALL_DIR}/bin/ovftool
 	fi
 
 	# appLoader dispatch symlinks inside lib/vmware/bin.
@@ -407,27 +406,27 @@ src_install() {
 
 	# Top-level convenience links matching vendor runtime layout where applicable.
 	[[ -e ${ED}${VM_INSTALL_DIR}/lib/vmware/bin/vmcli ]] && \
-		dosym /opt/vmware/lib/vmware/bin/vmcli ${VM_INSTALL_DIR}/bin/vmcli
+		dosym ../lib/vmware/bin/vmcli ${VM_INSTALL_DIR}/bin/vmcli
 
 	[[ -e ${ED}${VM_INSTALL_DIR}/lib/vmware/bin/vmware-fuseUI ]] && \
-		dosym /opt/vmware/lib/vmware/bin/vmware-fuseUI ${VM_INSTALL_DIR}/bin/vmware-fuseUI
+		dosym ../lib/vmware/bin/vmware-fuseUI ${VM_INSTALL_DIR}/bin/vmware-fuseUI
 
 	[[ -e ${ED}${VM_INSTALL_DIR}/lib/vmware/bin/vmware-mount ]] && \
-		dosym /opt/vmware/lib/vmware/bin/vmware-mount ${VM_INSTALL_DIR}/bin/vmware-mount
+		dosym ../lib/vmware/bin/vmware-mount ${VM_INSTALL_DIR}/bin/vmware-mount
 
 	[[ -e ${ED}${VM_INSTALL_DIR}/lib/vmware/bin/vmware-netcfg ]] && \
-		dosym /opt/vmware/lib/vmware/bin/vmware-netcfg ${VM_INSTALL_DIR}/bin/vmware-netcfg
+		dosym ../lib/vmware/bin/vmware-netcfg ${VM_INSTALL_DIR}/bin/vmware-netcfg
 
 	[[ -e ${ED}${VM_INSTALL_DIR}/lib/vmware/bin/vmware-usbarbitrator ]] && \
-		dosym /opt/vmware/lib/vmware/bin/vmware-usbarbitrator ${VM_INSTALL_DIR}/bin/vmware-usbarbitrator
+		dosym ../lib/vmware/bin/vmware-usbarbitrator ${VM_INSTALL_DIR}/bin/vmware-usbarbitrator
 
 	[[ -e ${ED}${VM_INSTALL_DIR}/lib/vmware/bin/appLoader ]] && \
-		dosym /opt/vmware/lib/vmware/bin/appLoader ${VM_INSTALL_DIR}/bin/vmrest
+		dosym ../lib/vmware/bin/appLoader ${VM_INSTALL_DIR}/bin/vmrest
 
 	use vix && [[ -e ${ED}${VM_INSTALL_DIR}/lib/vmware/bin/appLoader ]] && \
-		dosym /opt/vmware/lib/vmware/bin/appLoader ${VM_INSTALL_DIR}/bin/vmrun
+		dosym ../lib/vmware/bin/appLoader ${VM_INSTALL_DIR}/bin/vmrun
 
-	dosym /opt/vmware/lib/vmware/icu /etc/vmware/icu
+	dosym ../../opt/vmware/lib/vmware/icu /etc/vmware/icu
 
 	# Permissions.
 	_vmware_fperms_ifexists 0755 \
@@ -551,14 +550,18 @@ src_install() {
 		fi
 
 		local manifest="vmware-tools-${guest_dir}/manifest.xml"
+		local cols="name,version,buildNumber,component_core_id,longName,description,type"
+		local values
 		if [[ -e ${manifest} ]]; then
 			local version
 			version="$(grep -oPm1 '(?<=<version>)[^<]+' "${manifest}")" || die
+			values="'vmware-tools-${guest_dir}','${version}','${PV_BUILD}',1,'${guest_dir}','${guest_dir}',1"
 			sqlite3 "${dbfile}" \
-				"INSERT INTO components(name,version,buildNumber,component_core_id,longName,description,type) VALUES('vmware-tools-${guest_dir}','${version}','${PV_BUILD}',1,'${guest_dir}','${guest_dir}',1);" || die
+				"INSERT INTO components(${cols}) VALUES(${values});" || die
 		elif [[ ${guest_flag} == darwin ]]; then
+			values="'vmware-tools-darwin','${VMWARE_FUSION_VER%/*}','${VMWARE_FUSION_VER#*/}',1,'darwin','darwin',1"
 			sqlite3 "${dbfile}" \
-				"INSERT INTO components(name,version,buildNumber,component_core_id,longName,description,type) VALUES('vmware-tools-darwin','${VMWARE_FUSION_VER%/*}','${VMWARE_FUSION_VER#*/}',1,'darwin','darwin',1);" || die
+				"INSERT INTO components(${cols}) VALUES(${values});" || die
 		fi
 
 		if [[ -e vmware-tools-${guest_dir}/${guest_dir}.iso ]]; then
