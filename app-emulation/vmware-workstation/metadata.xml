@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>gentoo@alexmoch.com</email>
+		<name>Alexander Moch</name>
+	</maintainer>
+	<use>
+		<flag name="doc">Install VMware documentation</flag>
+		<flag name="macos-guests">Patch the installed binaries with the
+			BDisp/unlocker tooling so macOS guests can be created and
+			run</flag>
+		<flag name="modules">Pull in <pkg>app-emulation/vmware-modules</pkg>
+			for the out-of-tree vmmon and vmnet kernel modules</flag>
+		<flag name="ovftool">Install the OVF Tool command-line utility for
+			converting and inspecting OVF/OVA appliances</flag>
+		<flag name="systemd">Install systemd unit files from
+			alex-moch/vmware-systemd in place of the vendor init
+			integration</flag>
+		<flag name="vix">Install the VIX automation API headers and
+			libraries</flag>
+	</use>
+	<upstream>
+		<doc>https://www.vmware.com/products/desktop-hypervisor/workstation-and-fusion</doc>
+	</upstream>
+</pkgmetadata>

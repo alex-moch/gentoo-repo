@@ -5,4 +5,7 @@
 		<email>gentoo@alexmoch.com</email>
 		<name>Alexander Moch</name>
 	</maintainer>
+	<upstream>
+		<remote-id type="github">pwndbg/pwndbg</remote-id>
+	</upstream>
 </pkgmetadata>

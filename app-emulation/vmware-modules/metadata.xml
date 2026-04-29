@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>gentoo@alexmoch.com</email>
+		<name>Alexander Moch</name>
+	</maintainer>
+	<longdescription>
+		Out-of-tree kernel modules (vmmon, vmnet) required by
+		app-emulation/vmware-workstation. Tracks the host kernel ABI so
+		that the workstation ebuild does not have to ship vendor module
+		sources.
+	</longdescription>
+	<upstream>
+		<remote-id type="github">alex-moch/vmware-modules</remote-id>
+	</upstream>
+</pkgmetadata>
