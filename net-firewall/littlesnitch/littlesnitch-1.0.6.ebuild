@@ -161,7 +161,7 @@ pkg_postinst() {
 	elog "  OpenRC:  rc-update add littlesnitch default"
 	elog "  systemd: systemctl enable littlesnitch"
 	elog ""
-	elog "The web UI is served on http://localhost:8855/ by default."
+	elog "The web UI is served on http://localhost:3031/ by default."
 	elog ""
 	elog "Minimum kernel version: 6.12"
 	elog "Required kernel options: CONFIG_DEBUG_INFO_BTF=y"
