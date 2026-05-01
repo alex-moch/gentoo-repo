@@ -7,7 +7,24 @@
 - Backticks around file and directory names.
 - Body with a brief description before trailers.
 - Always include `Signed-off-by: Alexander Moch <mail@alexmoch.com>`
-- Include `Co-authored-by` only for significant contributions by Claude beyond typing assistance.
+- Include `Co-authored-by` when Claude wrote substantive code or made design decisions. Skip for routine version bumps, mechanical refactors, and pure data entry (e.g. filling in `metadata.xml` from user-provided facts).
+
+## Workflow
+
+- Never run `git commit`. The user performs all commits; just provide
+  the commit message.
+- `pkgdev manifest` requires `sudo` — `/var/cache/distfiles/` is owned
+  by `root:portage` and the user is not in the `portage` group.
+- Use `git mv` when renaming ebuild files (e.g. for version bumps) so
+  the rename is preserved in history.
+- Run `pkgcheck scan` after editing ebuilds or metadata to catch
+  policy issues early.
+- One commit per logical change. Don't bundle unrelated cleanups
+  into a single commit, and don't pre-stage when the user might
+  want to split.
+- For non-trivial tasks, ask focused clarifying questions before
+  making cross-cutting decisions rather than guessing and
+  proceeding.
 
 ## Ebuilds
 
@@ -15,6 +32,21 @@
 - For new packages, check the main Gentoo tree and public overlays first; use existing ebuilds as boilerplate where useful.
 - When working on a package, check whether a newer upstream release is available.
 - Add `metadata.xml` if non-existent.
+
+## metadata.xml
+
+- Maintainer email is `gentoo@alexmoch.com` (intentionally different
+  from the commit `Signed-off-by` which uses `mail@alexmoch.com`).
+- For forked ebuilds, replace the upstream maintainer with the local
+  one rather than coexist.
+- `<pkg>` only accepts Gentoo package atoms (e.g.
+  `app-emulation/vmware-modules`) — never put arbitrary `org/repo`
+  strings inside `<pkg>`; `pkgcheck` will flag them.
+- `<code>` is not a valid element. Use plain text or backticks for
+  inline tokens in flag descriptions.
+- Authoritative element/attribute list lives in the DTD; fetch with
+  `curl https://www.gentoo.org/dtd/metadata.dtd` to check what's
+  allowed before guessing.
 
 ## Indentation
 
@@ -50,6 +82,20 @@ when looking up upstream changes or comparing against the source ebuilds.
 | `dev-vcs/gitleaks` | Pentoo | Forked, maintainer reassigned |
 | `net-firewall/littlesnitch` | local | Written from scratch — no upstream ebuild reference; product page at https://obdev.at/products/littlesnitch-linux/index.html |
 | `sci-ml/ollama` | GURU | Forked, maintainer reassigned, refactored |
+
+### VMware Workstation version encoding
+
+The ebuild's `PV` encodes the marketing "H2" into field 2 (e.g.
+`25.2.1.25219725`) so `ver_cut 2` directly yields the half number for
+`MY_RELEASE="${MY_YEAR}H${MY_HALF}"`. VMware itself reports the same
+build as `25.0.1.25219725` in the About dialog and in Broadcom CDS
+metadata — both refer to the same release (25H2u1, build 25219725).
+
+The overlay convention follows the inherited
+nest / pg_overlay / pf4public encoding rather than VMware's canonical
+form so that the bundle filename can be reconstructed from `PV`
+alone. If you ever switch to canonical, the `MY_HALF` derivation has
+to be hardcoded or table-driven instead of `ver_cut`.
 
 ## Upstream version checks
 
