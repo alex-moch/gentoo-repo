@@ -188,9 +188,9 @@ src_prepare() {
 
 	if use macos-guests; then
 		sed -i \
-			-e "s#vmx_path = '/usr#vmx_path = '${ED}${VM_INSTALL_DIR}#" \
-			-e "s#os.path.isfile('/usr#os.path.isfile('${ED}${VM_INSTALL_DIR}#" \
-			-e "s#vmwarebase = '/usr#vmwarebase = '${ED}${VM_INSTALL_DIR}#" \
+			-e "s#vmx_path = '/usr#vmx_path = '${EPREFIX}${VM_INSTALL_DIR}#" \
+			-e "s#os.path.isfile('/usr#os.path.isfile('${EPREFIX}${VM_INSTALL_DIR}#" \
+			-e "s#vmwarebase = '/usr#vmwarebase = '${EPREFIX}${VM_INSTALL_DIR}#" \
 			"${WORKDIR}/unlocker-${UNLOCKER_VERSION}/unlocker.py" || die
 	fi
 
