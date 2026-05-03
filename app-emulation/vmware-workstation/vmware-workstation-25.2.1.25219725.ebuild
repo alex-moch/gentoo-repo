@@ -19,7 +19,7 @@ MY_PN="VMware-Workstation-Full"
 MY_P="${MY_PN}-${MY_RELEASE}-${PV_BUILD}"
 PV_MODULES="$(ver_cut 1-2)"
 
-VMWARE_FUSION_VER="13.6.3/24585314"
+VMWARE_FUSION_VER="25.0.1/25219963"
 SYSTEMD_COMMIT="1f4952c6200459672f874c0c222e5f18a9f10c48"
 UNLOCKER_VERSION="3.1.3"
 
@@ -59,6 +59,7 @@ RDEPEND="
 	dev-libs/gmp:0
 	dev-libs/icu:=
 	dev-libs/json-c:=
+	dev-libs/libxml2-compat:2
 	dev-libs/nettle:0
 	gnome-base/dconf
 	media-gfx/graphite2
@@ -68,6 +69,7 @@ RDEPEND="
 	media-plugins/alsa-plugins[speex]
 	net-dns/libidn:=
 	net-libs/gnutls:=
+	sys-apps/tcp-wrappers
 	sys-apps/util-linux
 	sys-auth/polkit
 	sys-fs/fuse:3
@@ -254,7 +256,11 @@ src_install() {
 		"${ED}${VM_INSTALL_DIR}/lib/vmware/libvmware-hostd.so" \
 		"${ED}${VM_INSTALL_DIR}/lib/vmware/libvmware-wssc-adminTool.so" \
 		"${ED}${VM_INSTALL_DIR}/lib/vmware/diskLibWrapper.so" \
-		"${ED}${VM_INSTALL_DIR}/lib/vmware/lib/libstdc++.so.6" || die
+		"${ED}${VM_INSTALL_DIR}/lib/vmware/lib/libstdc++.so.6" \
+		"${ED}${VM_INSTALL_DIR}/lib/vmware/lib/libxcb.so.1" || die
+
+	local lib_xcb_cds="${ED}${VM_INSTALL_DIR}/lib/vmware-installer/${vmware_installer_version}/cdsHelper/lib/libxcb.so.1"
+	[[ -e ${lib_xcb_cds} ]] && rm -f "${lib_xcb_cds}"
 
 	# VMware installer infrastructure.
 	insinto "${VM_INSTALL_DIR}/lib/vmware-installer/${vmware_installer_version}"
