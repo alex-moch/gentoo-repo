@@ -7,25 +7,26 @@ DESCRIPTION="Application-level firewall for Linux using eBPF"
 HOMEPAGE="https://obdev.at/products/littlesnitch-linux/"
 
 _PV="${PV}"
+_PKG_REV=1
 _DLBASE="https://obdev.at/downloads/littlesnitch-linux"
 
 # Always fetch the packaged archive for service files, docs, and metainfo.
 # When USE=static, also fetch the musl binary and prefer it at install time.
 SRC_URI="
 	amd64? (
-		${_DLBASE}/${PN}-${_PV}-1-x86_64.pkg.tar.zst
+		${_DLBASE}/${PN}-${_PV}-${_PKG_REV}-x86_64.pkg.tar.zst
 		static? ( ${_DLBASE}/${PN}-${_PV}-amd64-linux-musl.tar.gz )
 	)
 	arm64? (
-		${_DLBASE}/${PN}-${_PV}-1-aarch64.pkg.tar.zst
+		${_DLBASE}/${PN}-${_PV}-${_PKG_REV}-aarch64.pkg.tar.zst
 		static? ( ${_DLBASE}/${PN}-${_PV}-arm64-linux-musl.tar.gz )
 	)
 	ppc64? (
-		${_DLBASE}/${PN}-${_PV}-1-ppc64le.pkg.tar.zst
+		${_DLBASE}/${PN}-${_PV}-${_PKG_REV}-ppc64le.pkg.tar.zst
 		static? ( ${_DLBASE}/${PN}-${_PV}-ppc64le-linux-musl.tar.gz )
 	)
 	riscv? (
-		${_DLBASE}/${PN}-${_PV}-1-riscv64.pkg.tar.zst
+		${_DLBASE}/${PN}-${_PV}-${_PKG_REV}-riscv64.pkg.tar.zst
 		static? ( ${_DLBASE}/${PN}-${_PV}-riscv64-linux-musl.tar.gz )
 	)
 "
@@ -98,7 +99,7 @@ src_unpack() {
 
 	# .pkg.tar.zst is not a format Portage recognises, but GNU tar
 	# auto-detects zstd compression.
-	local pkg="${PN}-${PV}-1-${arch}.pkg.tar.zst"
+	local pkg="${PN}-${PV}-${_PKG_REV}-${arch}.pkg.tar.zst"
 	einfo "Unpacking ${pkg} ..."
 	tar xf "${DISTDIR}/${pkg}" -C "${WORKDIR}" \
 		|| die "Failed to unpack ${pkg}"
