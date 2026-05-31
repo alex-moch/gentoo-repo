@@ -3,7 +3,7 @@
 
 EAPI=8
 
-PYTHON_COMPAT=( python3_{13..14} )
+PYTHON_COMPAT=( python3_{13..15} )
 
 inherit desktop edo pam python-any-r1 readme.gentoo-r1 systemd xdg
 
@@ -19,7 +19,7 @@ MY_PN="VMware-Workstation-Full"
 MY_P="${MY_PN}-${MY_RELEASE}-${PV_BUILD}"
 PV_MODULES="$(ver_cut 1-2)"
 
-VMWARE_FUSION_VER="25.0.1/25219963"
+VMWARE_FUSION_VER="26.0.0/25388279"
 SYSTEMD_COMMIT="1f4952c6200459672f874c0c222e5f18a9f10c48"
 UNLOCKER_VERSION="3.1.3"
 
@@ -187,10 +187,13 @@ src_prepare() {
 	fi
 
 	if use macos-guests; then
+		# Redirect unlocker writes into the staging image. EPREFIX-only
+		# rewrites would point at the live `/opt/vmware/...` tree, which
+		# is outside the sandbox.
 		sed -i \
-			-e "s#vmx_path = '/usr#vmx_path = '${EPREFIX}${VM_INSTALL_DIR}#" \
-			-e "s#os.path.isfile('/usr#os.path.isfile('${EPREFIX}${VM_INSTALL_DIR}#" \
-			-e "s#vmwarebase = '/usr#vmwarebase = '${EPREFIX}${VM_INSTALL_DIR}#" \
+			-e "s#vmx_path = '/usr#vmx_path = '${ED%/}${VM_INSTALL_DIR}#" \
+			-e "s#os.path.isfile('/usr#os.path.isfile('${ED%/}${VM_INSTALL_DIR}#" \
+			-e "s#vmwarebase = '/usr#vmwarebase = '${ED%/}${VM_INSTALL_DIR}#" \
 			"${WORKDIR}/unlocker-${UNLOCKER_VERSION}/unlocker.py" || die
 	fi
 
@@ -230,11 +233,12 @@ src_install() {
 
 	dosbin vmware-vmx/sbin/vmware-authd vmware-vmx/sbin/vmware-authdlauncher
 
-	# Main VMware library tree.
+	# Main VMware library tree. Player libs and runtime bits live under
+	# `vmware-other-apps/lib/` since 26H1; `vmware-player-app/` is gone.
 	insinto "${VM_INSTALL_DIR}/lib/vmware"
 	doins -r \
 		vmware-network-editor/lib/. \
-		vmware-player-app/lib/. \
+		vmware-other-apps/lib/. \
 		vmware-vmx/lib/. \
 		vmware-vprobe/lib/. \
 		vmware-workstation/lib/. \
@@ -294,13 +298,12 @@ src_install() {
 		-e "s,@@VMWARE_INSTALLER@@,${VM_INSTALL_DIR}/lib/vmware-installer/${vmware_installer_version}," \
 		"${ED}/etc/vmware-installer/bootstrap" || die
 
-	# Desktop integration.
+	# Desktop integration. Player was removed in 26H1; only Workstation
+	# and the network editor UI ship desktop / appdata files now.
 	insinto /usr/share/metainfo
 	doins vmware-workstation/share/appdata/vmware-workstation.appdata.xml
-	doins vmware-player-app/share/appdata/vmware-player.appdata.xml
 
 	domenu vmware-workstation/share/applications/vmware-workstation.desktop
-	domenu vmware-player-app/share/applications/vmware-player.desktop
 	[[ -e vmware-network-editor-ui/share/applications/vmware-netcfg.desktop ]] && \
 		domenu vmware-network-editor-ui/share/applications/vmware-netcfg.desktop
 
@@ -308,30 +311,19 @@ src_install() {
 	for size in 16 22 24 32 48 256; do
 		[[ -e vmware-workstation/share/icons/hicolor/${size}x${size}/apps/vmware-workstation.png ]] && \
 			doicon -s "${size}" vmware-workstation/share/icons/hicolor/${size}x${size}/apps/vmware-workstation.png
-		[[ -e vmware-player-app/share/icons/hicolor/${size}x${size}/apps/vmware-player.png ]] && \
-			doicon -s "${size}" vmware-player-app/share/icons/hicolor/${size}x${size}/apps/vmware-player.png
 		[[ -e vmware-network-editor-ui/share/icons/hicolor/${size}x${size}/apps/vmware-netcfg.png ]] && \
 			doicon -s "${size}" vmware-network-editor-ui/share/icons/hicolor/${size}x${size}/apps/vmware-netcfg.png
 	done
 
 	dosym ../icons/hicolor/256x256/apps/vmware-workstation.png /usr/share/pixmaps/vmware-workstation.png
-	dosym ../icons/hicolor/256x256/apps/vmware-player.png /usr/share/pixmaps/vmware-player.png
 	[[ -e "${ED}/usr/share/icons/hicolor/256x256/apps/vmware-netcfg.png" ]] && \
 		dosym ../icons/hicolor/256x256/apps/vmware-netcfg.png /usr/share/pixmaps/vmware-netcfg.png
-
-	insinto /usr/share/mime/packages
-	doins vmware-player-app/share/mime/packages/vmware-player.xml
 
 	if [[ -e "${ED}${VM_INSTALL_DIR}/lib/vmware/libconf/etc/gtk-3.0/gdk-pixbuf.loaders" ]]; then
 		sed -i \
 			-e "s:@@LIBCONF_DIR@@:${EPREFIX}${VM_INSTALL_DIR}/lib/vmware/libconf:g" \
 			"${ED}${VM_INSTALL_DIR}/lib/vmware/libconf/etc/gtk-3.0/gdk-pixbuf.loaders" || die
 	fi
-
-	sed -i \
-		-e "s:@@BINARY@@:${EPREFIX}${VM_INSTALL_DIR}/bin/vmplayer:g" \
-		-e "/^Encoding/d" \
-		"${ED}/usr/share/applications/vmware-player.desktop" || die
 
 	sed -i \
 		-e "s:@@BINARY@@:${EPREFIX}${VM_INSTALL_DIR}/bin/vmware:g" \
@@ -374,7 +366,9 @@ src_install() {
 	if use vix; then
 		insinto "${VM_INSTALL_DIR}/lib/vmware-vix"
 		doins -r vmware-vix-core/lib/.
-		doins -r vmware-vix-lib-Workstation"$(ver_cut 1)"00/lib/.
+		# Backcompat dir name encodes the VIX API ABI (e.g. 1700), not the
+		# Workstation marketing year — VMware freezes ABIs across releases.
+		doins -r vmware-vix-lib-Workstation*/lib/.
 
 		dosym vmware-vix/libvixAllProducts.so ${VM_INSTALL_DIR}/lib/libvixAllProducts.so
 

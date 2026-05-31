@@ -5,7 +5,7 @@ EAPI=8
 
 inherit linux-mod-r1
 
-COMMIT="316e75e8db2505d66179cb8911a0bcaf5919610b"
+COMMIT="ba3a73bd88cf865c46799af911e31d90b030f2e1"
 
 DESCRIPTION="VMware Workstation kernel modules (vmmon, vmnet)"
 HOMEPAGE="https://github.com/alex-moch/vmware-modules"
