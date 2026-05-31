@@ -7,7 +7,7 @@
 - Backticks around file and directory names.
 - Body with a brief description before trailers.
 - Always include `Signed-off-by: Alexander Moch <mail@alexmoch.com>`
-- Include `Co-authored-by` when Claude wrote substantive code or made design decisions. Skip for routine version bumps, mechanical refactors, and pure data entry (e.g. filling in `metadata.xml` from user-provided facts).
+- Include `Co-authored-by: Claude <model> <noreply@anthropic.com>` when Claude wrote substantive code or made design decisions. Include the model name (e.g. `Claude Opus 4.7`, `Claude Sonnet 4.6`) so commits stay attributable to a specific model generation. Skip for routine version bumps, mechanical refactors, and pure data entry (e.g. filling in `metadata.xml` from user-provided facts).
 
 ## Workflow
 
