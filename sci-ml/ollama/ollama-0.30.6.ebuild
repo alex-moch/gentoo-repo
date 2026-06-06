@@ -12,6 +12,11 @@ inherit flag-o-matic go-module linux-info systemd toolchain-funcs
 DESCRIPTION="Get up and running with Llama 3, Mistral, Gemma, and other language models."
 HOMEPAGE="https://ollama.com"
 
+# Pinned llama.cpp revision. Must match the contents of the upstream
+# ${S}/LLAMA_CPP_VERSION file; src_prepare verifies this. llama.cpp tags
+# releases as bNNNN, so the tag doubles as the archive name.
+LLAMA_CPP_COMMIT="b9509"
+
 if [[ ${PV} == *9999* ]]; then
 	inherit git-r3
 	EGIT_REPO_URI="https://github.com/ollama/ollama.git"
@@ -21,11 +26,17 @@ else
 	SRC_URI="
 		https://github.com/ollama/${PN}/archive/refs/tags/v${MY_PV}.tar.gz -> ${MY_P}.gh.tar.gz
 		https://github.com/gentoo-golang-dist/${PN}/releases/download/v${MY_PV}/${MY_P}-deps.tar.xz
+		https://github.com/ggml-org/llama.cpp/archive/refs/tags/${LLAMA_CPP_COMMIT}.tar.gz
+			-> llama.cpp-${LLAMA_CPP_COMMIT}.tar.gz
 	"
 	if [[ ${PV} != *_rc* ]]; then
 		KEYWORDS="~amd64"
 	fi
 fi
+
+# Upstream now fetches llama.cpp at configure time via FetchContent; we
+# supply it offline instead and point the build at this tree.
+LLAMA_CPP_S="${WORKDIR}/llama.cpp-${LLAMA_CPP_COMMIT}"
 
 LICENSE="MIT"
 SLOT="0"
@@ -37,26 +48,6 @@ BLAS_REQUIRED_USE="blas? ( ?? ( ${BLAS_BACKENDS} ) )"
 
 IUSE+=" blas flexiblas ${BLAS_BACKENDS}"
 REQUIRED_USE+=" ${BLAS_REQUIRED_USE}"
-
-declare -rgA CPU_FEATURES=(
-	[AVX2]="x86"
-	[AVX512F]="x86"
-	[AVX512_VBMI]="x86;avx512vbmi"
-	[AVX512_VNNI]="x86"
-	[AVX]="x86"
-	[AVX_VNNI]="x86"
-	[BMI2]="x86"
-	[F16C]="x86"
-	[FMA]="x86;fma3"
-	[SSE42]="x86;sse4_2"
-)
-add_cpu_features_use() {
-	for flag in "${!CPU_FEATURES[@]}"; do
-		IFS=$';' read -r arch use <<< "${CPU_FEATURES[${flag}]}"
-		IUSE+=" cpu_flags_${arch}_${use:-${flag,,}}"
-	done
-}
-add_cpu_features_use
 
 RESTRICT="mirror test"
 
@@ -91,7 +82,7 @@ COMMON_DEPEND="
 
 DEPEND="
 	${COMMON_DEPEND}
-	>=dev-lang/go-1.24.1
+	>=dev-lang/go-1.26.0
 "
 BDEPEND="
 	vulkan? (
@@ -105,11 +96,6 @@ RDEPEND="
 	acct-group/${PN}
 	>=acct-user/${PN}-3[cuda?]
 "
-
-PATCHES=(
-	"${FILESDIR}/${PN}-9999-use-GNUInstallDirs.patch"
-	"${FILESDIR}/${PN}-0.18.0-make-installing-runtime-deps-optional.patch"
-)
 
 pkg_setup() {
 	if use rocm; then
@@ -142,163 +128,130 @@ src_unpack() {
 src_prepare() {
 	cmake_src_prepare
 
-	# TODO see src_unpack?
-	sed \
-		-e "s/ -O3//g" \
-		-i \
-			ml/backend/ggml/ggml/src/ggml-cpu/cpu.go \
-		|| die "-O3 sed failed"
-
-	# grep -Rl -e 'lib/ollama' -e '"..", "lib"'  --include '*.go'
-	sed \
-		-e "s/\"..\", \"lib\"/\"..\", \"$(get_libdir)\"/" \
-		-e "s#\"lib/ollama\"#\"$(get_libdir)/ollama\"#" \
-		-i \
-			ml/backend/ggml/ggml/src/ggml.go \
-			ml/path.go \
-		|| die "libdir sed failed"
-
-	if use amd64; then
-		# Map each ggml CPU backend variant to the cpu_flags_x86_* USE flags
-		# it requires. Variants whose required flags are not all enabled get
-		# commented out in the upstream CMakeLists.
-		local -A ggml_variants=(
-			[sse42]="sse4_2"
-			[sandybridge]="sse4_2 avx"
-			[haswell]="sse4_2 avx f16c avx2 bmi2 fma3"
-			[skylakex]="sse4_2 avx f16c avx2 bmi2 fma3 avx512f"
-			[icelake]="sse4_2 avx f16c avx2 bmi2 fma3 avx512f avx512vbmi avx512_vnni"
-			[alderlake]="sse4_2 avx f16c avx2 bmi2 fma3 avx_vnni"
-		)
-
-		local variant flag have_all
-		for variant in "${!ggml_variants[@]}"; do
-			have_all=1
-			for flag in ${ggml_variants[${variant}]}; do
-				use "cpu_flags_x86_${flag}" || { have_all=0; break; }
-			done
-			if [[ ${have_all} -eq 0 ]]; then
-				sed -e "/ggml_add_cpu_backend_variant(${variant}/s/^/# /g" \
-					-i ml/backend/ggml/ggml/src/CMakeLists.txt || die
-			fi
-		done
+	# The bundled llama.cpp revision must match the one upstream pinned,
+	# otherwise the compat patch and ABI assumptions break.
+	local pinned
+	pinned="$(<LLAMA_CPP_VERSION)" || die "cannot read LLAMA_CPP_VERSION"
+	if [[ ${pinned} != "${LLAMA_CPP_COMMIT}" ]]; then
+		die "llama.cpp pin mismatch: ebuild has ${LLAMA_CPP_COMMIT}, upstream wants ${pinned}"
 	fi
+
+	# The Go binary locates its runtime payload relative to the executable
+	# (../lib/ollama). Rewrite the hardcoded "lib" segment to honour
+	# multilib so the libraries are found under $(get_libdir)/ollama.
+	# grep -Rl '"lib", "ollama"' --include '*.go'
+	sed -i \
+		-e "s/\"lib\", \"ollama\"/\"$(get_libdir)\", \"ollama\"/g" \
+		ml/path.go discover/types.go \
+		|| die "libdir sed failed"
 
 	if use cuda; then
 		cuda_src_prepare
 	fi
-
-	if use rocm; then
-		# --hip-version gets appended to the compile flags which isn't a known flag.
-		# This causes rocm builds to fail because -Wunused-command-line-argument is turned on.
-		# Use nuclear option to fix this.
-		# Disable -Werror's from go modules.
-		find "${S}" -name ".go" -exec sed -i "s/ -Werror / /g" {} + || die
-	fi
 }
 
-src_configure() {
-	local mycmakeargs=(
-		-DOLLAMA_INSTALL_RUNTIME_DEPS="no"
-		-DGGML_CCACHE="no"
+# Configure and build one llama-server runner variant. The first invocation
+# applies upstream's llama.cpp compat patch to ${LLAMA_CPP_S}; it is
+# idempotent, so subsequent runners reuse the same patched source tree.
+_ollama_native_build() {
+	local runner=${1}
 
-		# backends end up in /usr/bin otherwise
-		-DGGML_BACKEND_DL="yes"
-		# TODO causes duplicate install warning but breaks detection otherwise ollama/issues/13614
-		-DGGML_BACKEND_DIR="${EPREFIX}/usr/$(get_libdir)/${PN}"
+	local CMAKE_USE_DIR="${S}/llama/server"
+	local BUILD_DIR="${WORKDIR}/build-${runner}"
+	local -a targets mycmakeargs
 
-		# -DGGML_CPU="yes"
-		-DGGML_BLAS="$(usex blas)"
-
-		# -DGGML_CUDA="$(usex cuda)"
-		# -DGGML_HIP="$(usex rocm)"
-
-		# -DGGML_METAL="yes" # apple
-		# missing from ml/backend/ggml/ggml/src/
-		# -DGGML_CANN="yes"
-		# -DGGML_MUSA="yes"
-		# -DGGML_RPC="yes"
-		# -DGGML_SYCL="yes"
-		# -DGGML_KOMPUTE="$(usex kompute)"
-		# -DGGML_OPENCL="$(usex opencl)"
-		# -DGGML_VULKAN="$(usex vulkan)"
-		"$(cmake_use_find_package vulkan Vulkan)"
+	mycmakeargs=(
+		-DBUILD_SHARED_LIBS=ON
+		-DGGML_BACKEND_DL=ON
+		# Honour CFLAGS/CXXFLAGS rather than -march=native.
+		-DGGML_NATIVE=OFF
+		-DGGML_OPENMP=OFF
+		-DOLLAMA_LIB_DIR="$(get_libdir)/ollama"
+		-DFETCHCONTENT_SOURCE_DIR_LLAMA_CPP="${LLAMA_CPP_S}"
 	)
 
-	if tc-is-lto ; then
+	case ${runner} in
+	cpu)
+		# Build all CPU micro-architecture backends; ggml selects the best
+		# one at runtime via GGML_BACKEND_DL.
 		mycmakeargs+=(
-			-DGGML_LTO="yes"
+			-DGGML_CPU_ALL_VARIANTS=ON
+			-DOLLAMA_RUNNER_DIR=""
+			-DGGML_BLAS="$(usex blas)"
 		)
-	fi
-
-	if use blas; then
-		if use flexiblas ; then
-			mycmakeargs+=(
-				-DGGML_BLAS_VENDOR="FlexiBLAS"
-			)
-		elif use blis ; then
-			mycmakeargs+=(
-				-DGGML_BLAS_VENDOR="FLAME"
-			)
-		elif use mkl ; then
-			mycmakeargs+=(
-				-DGGML_BLAS_VENDOR="Intel10_64lp"
-			)
-		elif use openblas ; then
-			mycmakeargs+=(
-				-DGGML_BLAS_VENDOR="OpenBLAS"
-			)
-		else
-			mycmakeargs+=(
-				-DGGML_BLAS_VENDOR="Generic"
-			)
+		if use blas; then
+			local vendor=Generic
+			if use flexiblas; then
+				vendor=FlexiBLAS
+			elif use blis; then
+				vendor=FLAME
+			elif use mkl; then
+				vendor=Intel10_64lp
+			elif use openblas; then
+				vendor=OpenBLAS
+			fi
+			mycmakeargs+=( -DGGML_BLAS_VENDOR="${vendor}" )
 		fi
-	fi
-
-	if use cuda; then
+		targets=( llama-server llama-quantize )
+		;;
+	vulkan)
+		mycmakeargs+=(
+			-DGGML_VULKAN=ON
+			-DOLLAMA_GPU_BACKEND=vulkan
+			-DOLLAMA_RUNNER_DIR="vulkan"
+		)
+		targets=( ggml-vulkan )
+		;;
+	cuda)
 		local -x CUDAHOSTCXX CUDAHOSTLD
 		CUDAHOSTCXX="$(cuda_gccdir)"
 		CUDAHOSTLD="$(tc-getCXX)"
 
 		# default to all-major for now until cuda.eclass is updated
-		if [[ ! -v CUDAARCHS ]]; then
-			local CUDAARCHS="all-major"
-		fi
+		local CUDAARCHS=${CUDAARCHS:-all-major}
 
 		mycmakeargs+=(
+			-DGGML_CUDA=ON
+			-DOLLAMA_GPU_BACKEND=cuda
+			-DOLLAMA_RUNNER_DIR="cuda_v12"
 			-DCMAKE_CUDA_ARCHITECTURES="${CUDAARCHS}"
 		)
+		targets=( ggml-cuda )
 
 		cuda_add_sandbox -w
 		addpredict "/dev/char/"
-	else
+		;;
+	rocm)
+		local -x HIP_PATH="${ESYSROOT}/usr"
 		mycmakeargs+=(
-			-DCMAKE_CUDA_COMPILER="NOTFOUND"
-		)
-	fi
-
-	if use rocm; then
-		mycmakeargs+=(
-			-DCMAKE_HIP_ARCHITECTURES="$(get_amdgpu_flags)"
+			-DGGML_HIP=ON
+			-DOLLAMA_GPU_BACKEND=hip
+			-DOLLAMA_RUNNER_DIR="rocm_v7_2"
 			-DCMAKE_HIP_PLATFORM="amd"
-			# ollama doesn't honor the default cmake options
+			-DCMAKE_HIP_ARCHITECTURES="$(get_amdgpu_flags)"
 			-DAMDGPU_TARGETS="$(get_amdgpu_flags)"
 		)
-
-		local -x HIP_PATH="${ESYSROOT}/usr"
-	else
-		mycmakeargs+=(
-			-DCMAKE_HIP_COMPILER="NOTFOUND"
-		)
-	fi
+		targets=( ggml-hip )
+		;;
+	esac
 
 	cmake_src_configure
+	cmake_build "${targets[@]}"
+}
+
+# Runners to build for the current USE configuration. CPU is always built.
+_ollama_active_runners() {
+	local runners="cpu"
+	use vulkan && runners+=" vulkan"
+	use cuda && runners+=" cuda"
+	use rocm && runners+=" rocm"
+	echo "${runners}"
 }
 
 src_compile() {
-	# export version information
-	# https://github.com/gentoo/guru/pull/205
-	# https://forums.gentoo.org/viewtopic-p-8831646.html
+	# Build the Go front-end binary. The native runtime (llama-server and
+	# the ggml backends) is built separately below and discovered at
+	# runtime under $(get_libdir)/ollama.
 	local VERSION
 	if [[ "${PV}" == *9999* ]]; then
 		VERSION="$(
@@ -309,8 +262,6 @@ src_compile() {
 		VERSION="${PVR}"
 	fi
 	local EXTRA_GOFLAGS_LD=(
-		# "-w" # disable DWARF generation
-		# "-s" # disable symbol table
 		"-X=github.com/ollama/ollama/version.Version=${VERSION}"
 		"-X=github.com/ollama/ollama/server.mode=release"
 	)
@@ -318,13 +269,20 @@ src_compile() {
 
 	ego build
 
-	cmake_src_compile
+	local runner
+	for runner in $(_ollama_active_runners); do
+		_ollama_native_build "${runner}"
+	done
 }
 
 src_install() {
 	dobin ollama
 
-	cmake_src_install
+	local runner
+	for runner in $(_ollama_active_runners); do
+		DESTDIR="${D}" cmake --install "${WORKDIR}/build-${runner}" \
+			--component llama-server || die "install of ${runner} runner failed"
+	done
 
 	newinitd "${FILESDIR}/ollama.init" "${PN}"
 	newconfd "${FILESDIR}/ollama.confd" "${PN}"
