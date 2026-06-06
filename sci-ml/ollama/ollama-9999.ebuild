@@ -191,6 +191,15 @@ _ollama_native_build() {
 	local BUILD_DIR="${WORKDIR}/build-${runner}"
 	local -a targets mycmakeargs
 
+	# We de-bundle the GPU vendor runtimes (see src_install). Upstream's
+	# install RPATH is already "$ORIGIN"; for cpu/rocm/vulkan that is all we
+	# need (rocm resolves through the system /usr/lib64), so stop CMake from
+	# also appending build-tree link directories that portage flags as
+	# insecure. The cuda backend is the exception: cublas/cudart live outside
+	# the default linker path, so it keeps the link directories enabled to
+	# bake the resolved toolkit libdir into its RUNPATH (set ON below).
+	local rpath_use_link=OFF
+
 	mycmakeargs=(
 		-DBUILD_SHARED_LIBS=ON
 		-DGGML_BACKEND_DL=ON
@@ -248,6 +257,9 @@ _ollama_native_build() {
 			-DCMAKE_CUDA_ARCHITECTURES="${CUDAARCHS}"
 		)
 		targets=( ggml-cuda )
+		# Keep the resolved CUDA toolkit libdir in the backend's RUNPATH,
+		# since the bundled cublas/cudart copies are pruned in src_install.
+		rpath_use_link=ON
 
 		cuda_add_sandbox -w
 		addpredict "/dev/char/"
@@ -265,6 +277,8 @@ _ollama_native_build() {
 		targets=( ggml-hip )
 		;;
 	esac
+
+	mycmakeargs+=( -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=${rpath_use_link} )
 
 	cmake_src_configure
 	cmake_build "${targets[@]}"
@@ -315,12 +329,22 @@ src_install() {
 			--component llama-server || die "install of ${runner} runner failed"
 	done
 
+	# Upstream bundles the GPU vendor runtime libraries next to each backend
+	# (CUDA's cublas/cudart; ROCm's amdhip64/rocblas/hipblas/rocsolver/
+	# hsa-runtime64 plus libdrm, libelf and the rocBLAS Tensile kernels) so
+	# the release tarball is self-contained. On Gentoo those are owned by the
+	# packages we depend on, so drop the bundled copies and keep only the
+	# ggml backend module; the dynamic linker resolves the rest from the
+	# system (ROCm via /usr/lib64, CUDA via the RUNPATH baked in at build
+	# time). This also clears the "pre-stripped files" QA notice.
+	local gpu_libdir="${ED}/usr/$(get_libdir)/ollama"
+	if use cuda; then
+		find "${gpu_libdir}/cuda_v12" -mindepth 1 ! -name 'libggml-cuda.so*' \
+			-delete || die "failed to prune bundled CUDA libraries"
+	fi
 	if use rocm; then
-		# rocBLAS bundles its Tensile kernels as AMD GPU code objects
-		# (*.hsaco). These are not host ELF, so portage's strip can't
-		# process them and spams "Unable to recognise the architecture".
-		# Exclude the directory from stripping.
-		dostrip -x "/usr/$(get_libdir)/ollama/rocm_v7_2/rocblas"
+		find "${gpu_libdir}/rocm_v7_2" -mindepth 1 ! -name 'libggml-hip.so*' \
+			-delete || die "failed to prune bundled ROCm libraries"
 	fi
 
 	newinitd "${FILESDIR}/ollama.init" "${PN}"
