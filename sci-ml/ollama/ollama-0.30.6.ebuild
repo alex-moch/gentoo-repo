@@ -148,6 +148,17 @@ src_prepare() {
 	if use cuda; then
 		cuda_src_prepare
 	fi
+
+	if use rocm; then
+		# Upstream forces CMAKE_HIP_FLAGS to "-parallel-jobs=4", an
+		# amdclang/hipcc-only option. Gentoo compiles HIP with the system
+		# LLVM clang, which rejects it ("unknown argument: '-parallel-jobs'")
+		# and aborts the enable_language(HIP) probe. Drop the flag.
+		sed -i \
+			-e 's/-parallel-jobs=4//g' \
+			llama/server/CMakeLists.txt \
+			|| die "parallel-jobs sed failed"
+	fi
 }
 
 # Configure and build one llama-server runner variant. The first invocation
