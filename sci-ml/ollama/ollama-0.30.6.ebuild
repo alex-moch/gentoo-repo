@@ -44,7 +44,13 @@ SLOT="0"
 IUSE="cuda rocm vulkan"
 
 BLAS_BACKENDS="blis mkl openblas"
-BLAS_REQUIRED_USE="blas? ( ?? ( ${BLAS_BACKENDS} ) )"
+BLAS_REQUIRED_USE="
+	blas? ( ?? ( ${BLAS_BACKENDS} ) )
+	flexiblas? ( blas )
+	blis? ( blas )
+	mkl? ( blas )
+	openblas? ( blas )
+"
 
 IUSE+=" blas flexiblas ${BLAS_BACKENDS}"
 REQUIRED_USE+=" ${BLAS_REQUIRED_USE}"
@@ -78,13 +84,16 @@ COMMON_DEPEND="
 		>=sci-libs/hipBLAS-${ROCM_VERSION}:=
 		>=sci-libs/rocBLAS-${ROCM_VERSION}:=
 	)
+	vulkan? (
+		media-libs/vulkan-loader
+	)
 "
 
 DEPEND="
 	${COMMON_DEPEND}
-	>=dev-lang/go-1.26.0
 "
 BDEPEND="
+	>=dev-lang/go-1.26.0
 	vulkan? (
 		dev-util/vulkan-headers
 		media-libs/shaderc
@@ -203,7 +212,7 @@ _ollama_native_build() {
 			fi
 			mycmakeargs+=( -DGGML_BLAS_VENDOR="${vendor}" )
 		fi
-		targets=( llama-server llama-quantize )
+		targets=( llama-server )
 		;;
 	vulkan)
 		mycmakeargs+=(
@@ -270,7 +279,7 @@ src_compile() {
 			| sed -e "s/^v//g"
 		)"
 	else
-		VERSION="${PVR}"
+		VERSION="${PV}"
 	fi
 	local EXTRA_GOFLAGS_LD=(
 		"-X=github.com/ollama/ollama/version.Version=${VERSION}"
