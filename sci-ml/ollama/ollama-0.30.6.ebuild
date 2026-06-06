@@ -295,6 +295,14 @@ src_install() {
 			--component llama-server || die "install of ${runner} runner failed"
 	done
 
+	if use rocm; then
+		# rocBLAS bundles its Tensile kernels as AMD GPU code objects
+		# (*.hsaco). These are not host ELF, so portage's strip can't
+		# process them and spams "Unable to recognise the architecture".
+		# Exclude the directory from stripping.
+		dostrip -x "/usr/$(get_libdir)/ollama/rocm_v7_2/rocblas"
+	fi
+
 	newinitd "${FILESDIR}/ollama.init" "${PN}"
 	newconfd "${FILESDIR}/ollama.confd" "${PN}"
 
