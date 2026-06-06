@@ -20,6 +20,14 @@ LLAMA_CPP_COMMIT="b9509"
 if [[ ${PV} == *9999* ]]; then
 	inherit git-r3
 	EGIT_REPO_URI="https://github.com/ollama/ollama.git"
+	# The live ebuild still needs the pinned llama.cpp tarball offline.
+	# src_prepare verifies LLAMA_CPP_COMMIT against the checkout's
+	# LLAMA_CPP_VERSION and dies if master has moved the pin (bump
+	# LLAMA_CPP_COMMIT, then re-manifest, when that happens).
+	SRC_URI="
+		https://github.com/ggml-org/llama.cpp/archive/refs/tags/${LLAMA_CPP_COMMIT}.tar.gz
+			-> llama.cpp-${LLAMA_CPP_COMMIT}.tar.gz
+	"
 else
 	MY_PV="${PV/_rc/-rc}"
 	MY_P="${PN}-${MY_PV}"
@@ -129,6 +137,9 @@ src_unpack() {
 	if [[ "${PV}" == *9999* ]]; then
 		git-r3_src_unpack
 		go-module_live_vendor
+		# git-r3 only unpacks the repository; the llama.cpp tarball from
+		# SRC_URI still needs to be extracted into ${WORKDIR}.
+		unpack "llama.cpp-${LLAMA_CPP_COMMIT}.tar.gz"
 	else
 		go-module_src_unpack
 	fi
