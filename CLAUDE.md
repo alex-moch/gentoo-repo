@@ -22,6 +22,11 @@
 - One commit per logical change. Don't bundle unrelated cleanups
   into a single commit, and don't pre-stage when the user might
   want to split.
+- `pkgcheck` passing does not mean a package works. For version
+  bumps — especially pinned ones that look like a pure rename — do a
+  runtime smoke test (`emerge` then actually launch the program)
+  before calling it done. Import-time dependency breakage is invisible
+  to `pkgcheck`.
 - For non-trivial tasks, ask focused clarifying questions before
   making cross-cutting decisions rather than guessing and
   proceeding.
@@ -78,7 +83,8 @@ when looking up upstream changes or comparing against the source ebuilds.
 | `acct-user/ollama` | GURU | Forked, maintainer reassigned |
 | `app-emulation/vmware-modules` | local | Tracks https://github.com/alex-moch/vmware-modules |
 | `app-emulation/vmware-workstation` | hybrid: nest + pg_overlay + pf4public | Heavy local rework |
-| `dev-debug/pwndbg` | Gentoo (official) | Version-pinned fork |
+| `dev-debug/pwndbg` | Gentoo (official) | Version-pinned fork, now **ahead** of the official tree and carrying local patches (capstone de-vendor via `src_prepare`, `niche-elf` dep, `pycparser` floor). No longer byte-identical to upstream — do not assume a clean diff/rebase |
+| `dev-python/niche-elf` | local | Created here from pwndbg's PyPI dependency (upstream `github.com/pwndbg/niche-elf`); pure-Python |
 | `dev-util/Tensile` | Gentoo (official) | Temporary local hold — do not update; remove once the official tree carries a sufficient version |
 | `dev-vcs/gitleaks` | Pentoo | Forked, maintainer reassigned |
 | `net-firewall/littlesnitch` | local | Written from scratch — no upstream ebuild reference; product page at https://obdev.at/products/littlesnitch-linux/index.html |
@@ -109,7 +115,8 @@ release (excluding pre-releases).
 |---|---|---|
 | `app-emulation/vmware-modules` | `https://api.github.com/repos/alex-moch/vmware-modules/commits` | Tracks `master`; ebuild's `COMMIT=` should match the first `sha` in the JSON response |
 | `app-emulation/vmware-workstation` | `https://softwareupdate.broadcom.com/cds/vmw-desktop/info-only/ws-linux/8.0.0/metadata.xml.gz` | See discovery chain below |
-| `dev-debug/pwndbg` | `https://api.github.com/repos/pwndbg/pwndbg/releases/latest` | Tag format `YYYY.MM.DD`; ebuild version drops the dots |
+| `dev-debug/pwndbg` | `https://api.github.com/repos/pwndbg/pwndbg/releases/latest` | Tag format `YYYY.MM.DD`; ebuild version drops the dots. See bump procedure below |
+| `dev-python/niche-elf` | (follows pwndbg) | Version is dictated by pwndbg's `pyproject.toml` pin, not bumped independently |
 | `dev-vcs/gitleaks` | `https://api.github.com/repos/gitleaks/gitleaks/releases/latest` | Tag prefixed with `v` |
 | `net-firewall/littlesnitch` | `https://obdev.at/products/littlesnitch-linux/download.html` | Parse the download URLs in the page (e.g. `littlesnitch-1.0.5-1-x86_64.pkg.tar.zst`); no machine-readable feed |
 | `sci-ml/ollama` | `https://api.github.com/repos/ollama/ollama/releases/latest` | Tag prefixed with `v`; check `https://api.github.com/repos/ollama/ollama/releases` (without `/latest`) to also see pre-releases |
@@ -117,6 +124,27 @@ release (excluding pre-releases).
 `acct-group/*` and `acct-user/*` packages have no upstream — they are
 local system-account definitions and are version-bumped only when the
 account schema needs to change.
+
+### pwndbg bump procedure
+
+A pwndbg bump is **not** a pure ebuild rename, even when the ebuild
+looks unchanged. Upstream pins its Python dependencies in
+`pyproject.toml`, and those shift between releases — this is what
+breaks at runtime (invisible to `pkgcheck`):
+
+- **`capstone6pwndbg`** — upstream vendors a forked capstone and imports
+  from that module name. The ebuild's `src_prepare` rewrites those
+  imports to the system `dev-libs/capstone` (`s/capstone6pwndbg/capstone/`)
+  and reconciles one renamed constant (`CS_MODE_RISCVC` →
+  `CS_MODE_RISCV_C`). Re-verify both on each bump: the import name may
+  change, and new capstone symbols may be missing from Gentoo's capstone.
+- **`niche-elf`** — separate `dev-python/niche-elf` package; keep its
+  version matching pwndbg's pin.
+- **`pycparser`** and other floors — diff the `pyproject.toml`
+  `dependencies` list against the ebuild's `RDEPEND` and update bounds.
+
+On every bump: fetch the source at the pinned tag, `grep -r capstone6pwndbg`
+and diff `pyproject.toml`, then runtime smoke-test (`emerge` + launch).
 
 ### Broadcom CDS discovery chain
 
