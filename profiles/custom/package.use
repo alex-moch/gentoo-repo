@@ -1,2 +1,6 @@
+# Replace util-linux's su with sudo-rs's drop-in.
 app-admin/sudo-rs su system-names
 sys-apps/util-linux -su
+
+# net-misc/onedrive hard-depends on GDC.
+sys-devel/gcc d
