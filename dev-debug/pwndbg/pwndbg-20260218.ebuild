@@ -31,7 +31,7 @@ RDEPEND="
 	$(python_gen_cond_dep '
 		>=dev-libs/capstone-6.0.0_alpha5[python,${PYTHON_USEDEP}]
 		>=dev-python/psutil-7.0.0[${PYTHON_USEDEP}]
-		>=dev-python/pycparser-2.23[${PYTHON_USEDEP}]
+		>=dev-python/pycparser-3.0[${PYTHON_USEDEP}]
 		>=dev-python/pyelftools-0.32[${PYTHON_USEDEP}]
 		>=dev-python/pygments-2.19.2[${PYTHON_USEDEP}]
 		>=dev-python/requests-2.32.5[${PYTHON_USEDEP}]
@@ -45,8 +45,22 @@ RDEPEND="
 	')
 "
 
-# Tests are architectur-specific (precompiled binaries)
+# Tests are architecture-specific (precompiled binaries)
 RESTRICT="test"
+
+src_prepare() {
+	distutils-r1_src_prepare
+
+	# Upstream vendors a forked capstone (the "capstone6pwndbg" module) and
+	# imports from it directly. Point those imports at the system
+	# dev-libs/capstone instead, which provides the same capstone 6.0.0 API.
+	# The fork's only incompatible name is the RISC-V compressed mode, which
+	# capstone calls CS_MODE_RISCV_C rather than CS_MODE_RISCVC.
+	find . -name '*.py' -exec sed -i \
+		-e 's/capstone6pwndbg/capstone/g' \
+		-e 's/CS_MODE_RISCVC/CS_MODE_RISCV_C/g' \
+		{} + || die "capstone de-vendor sed failed"
+}
 
 src_install() {
 	distutils-r1_src_install
@@ -62,10 +76,10 @@ src_install() {
 
 pkg_postinst() {
 	if [[ -z "${REPLACING_VERSIONS}" ]]; then
-		einfo "\nUsage:"
+		einfo "Usage:"
 		einfo "    ~$ pwndbg <program>"
-		ewarn "\nWARNING!!!"
-		ewarn "Some pwndbg commands only works with libc debug symbols.\n"
+		einfo
+		ewarn "Some pwndbg commands only work with libc debug symbols."
 		ewarn "See also:"
 		ewarn " * https://github.com/pentoo/pentoo-overlay/issues/521#issuecomment-548975884"
 		ewarn " * https://sourceware.org/gdb/onlinedocs/gdb/Separate-Debug-Files.html"
