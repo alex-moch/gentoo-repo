@@ -79,6 +79,7 @@ when looking up upstream changes or comparing against the source ebuilds.
 | `app-emulation/vmware-modules` | local | Tracks https://github.com/alex-moch/vmware-modules |
 | `app-emulation/vmware-workstation` | hybrid: nest + pg_overlay + pf4public | Heavy local rework |
 | `dev-debug/pwndbg` | Gentoo (official) | Version-pinned fork |
+| `dev-util/Tensile` | Gentoo (official) | Temporary local hold — do not update; remove once the official tree carries a sufficient version |
 | `dev-vcs/gitleaks` | Pentoo | Forked, maintainer reassigned |
 | `net-firewall/littlesnitch` | local | Written from scratch — no upstream ebuild reference; product page at https://obdev.at/products/littlesnitch-linux/index.html |
 | `sci-ml/ollama` | GURU | Forked, maintainer reassigned, refactored |
