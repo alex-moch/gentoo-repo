@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+  <maintainer type="person">
+    <email>gentoo@alexmoch.com</email>
+    <name>Alexander Moch</name>
+  </maintainer>
+  <use>
+    <flag name="drm">Build with DRM/KMS output support for the cam tool</flag>
+    <flag name="elfutils">Build with improved debugging using <pkg>dev-libs/elfutils</pkg></flag>
+    <flag name="gui">Build QCam extra tool</flag>
+    <flag name="jpeg">Build the cam tool with MJPEG support in the SDL sink (requires USE=sdl)</flag>
+    <flag name="openssl">Verify IPA module signatures using <pkg>dev-libs/openssl</pkg> rather than <pkg>net-libs/gnutls</pkg>. Note: <pkg>dev-libs/openssl</pkg> is also required at build time to sign IPA modules regardless of this flag.</flag>
+    <flag name="sdl">Build the cam extra tool with SDL sink support (requires USE=gui)</flag>
+    <flag name="tiff">Build the cam and qcam tools with DNG file output support</flag>
+    <flag name="tools">Build extra tools (including cam, qcam and lc-compliance). Note: 'qcam' also requires USE=gui</flag>
+    <flag name="trace">Build with tracing capabilities</flag>
+    <flag name="unwind">Build with improved debugging using <pkg>sys-libs/libunwind</pkg> (has no effect if USE=elfutils is set)</flag>
+    <flag name="v4l">Build the V4L2 compatibility layer</flag>
+  </use>
+  <upstream>
+    <remote-id type="freedesktop-gitlab">camera/libcamera</remote-id>
+  </upstream>
+</pkgmetadata>
