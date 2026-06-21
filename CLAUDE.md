@@ -81,6 +81,7 @@ when looking up upstream changes or comparing against the source ebuilds.
 | `acct-group/ollama` | GURU | Forked, maintainer reassigned |
 | `acct-group/vmware` | local | Created here |
 | `acct-user/ollama` | GURU | Forked, maintainer reassigned |
+| `app-forensics/sleuthkit` | Gentoo (official) | Forked, maintainer reassigned. Carries local patches: refreshed `exclude-usr-local`, plus `gnuconfig_update` on the bundled libewf so `USE=ewf` builds on `aarch64`/`musl` |
 | `app-emulation/vmware-modules` | local | Tracks https://github.com/alex-moch/vmware-modules |
 | `app-emulation/vmware-workstation` | hybrid: nest + pg_overlay + pf4public | Heavy local rework |
 | `dev-debug/pwndbg` | Gentoo (official) | Version-pinned fork, now **ahead** of the official tree and carrying local patches (capstone de-vendor via `src_prepare`, `niche-elf` dep, `pycparser` floor). No longer byte-identical to upstream — do not assume a clean diff/rebase |
@@ -115,6 +116,7 @@ release (excluding pre-releases).
 |---|---|---|
 | `app-emulation/vmware-modules` | `https://api.github.com/repos/alex-moch/vmware-modules/commits` | Tracks `master`; ebuild's `COMMIT=` should match the first `sha` in the JSON response |
 | `app-emulation/vmware-workstation` | `https://softwareupdate.broadcom.com/cds/vmw-desktop/info-only/ws-linux/8.0.0/metadata.xml.gz` | See discovery chain below |
+| `app-forensics/sleuthkit` | `https://api.github.com/repos/sleuthkit/sleuthkit/releases/latest` | Tag format `sleuthkit-X.Y.Z`; ebuild version is the `X.Y.Z` part. On bump, re-check `tsk/Makefile.am`'s `-version-info` first field for the `SLOT` subslot |
 | `dev-debug/pwndbg` | `https://api.github.com/repos/pwndbg/pwndbg/releases/latest` | Tag format `YYYY.MM.DD`; ebuild version drops the dots. See bump procedure below |
 | `dev-python/niche-elf` | (follows pwndbg) | Version is dictated by pwndbg's `pyproject.toml` pin, not bumped independently |
 | `dev-vcs/gitleaks` | `https://api.github.com/repos/gitleaks/gitleaks/releases/latest` | Tag prefixed with `v` |
