@@ -1,0 +1,25 @@
+From: Gokturk Yuksek <gokturk@gentoo.org>
+
+Do not allow the build system to use libs from /usr/local.
+
+Bug: https://bugs.gentoo.org/774039
+
+Refreshed for 4.15.0, which added a separate mingw branch to the same
+case statement for -Wno-format.
+
+--- a/configure.ac
++++ b/configure.ac
+@@ -104,13 +104,6 @@
+   CFLAGS="$CFLAGS -Wno-format"
+   CXXFLAGS="$CXXFLAGS -Wno-format"
+   ;;
+-*)
+-  dnl Not all compilers include /usr/local in the include and link path
+-  if test -d /usr/local/include; then
+-    CPPFLAGS="$CPPFLAGS -I/usr/local/include"
+-    LDFLAGS="$LDFLAGS -L/usr/local/lib"
+-  fi
+-  ;;
+ esac
+
+ dnl Add enable/disable option
