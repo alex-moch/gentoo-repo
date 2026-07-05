@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>gentoo@alexmoch.com</email>
+		<name>Alexander Moch</name>
+	</maintainer>
+	<longdescription lang="en">
+		The Claude desktop application for Linux, repackaged from
+		Anthropic's official .deb distribution. Provides the Chat,
+		Cowork, and Claude Code experience in a single Electron app.
+		Sign-in requires a claude.ai subscription or organisation SSO;
+		the desktop app does not accept a Console API key.
+	</longdescription>
+	<upstream>
+		<doc lang="en">https://code.claude.com/docs/en/desktop-linux</doc>
+		<bugs-to>https://github.com/anthropics/claude-code/issues</bugs-to>
+	</upstream>
+</pkgmetadata>

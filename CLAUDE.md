@@ -84,6 +84,7 @@ when looking up upstream changes or comparing against the source ebuilds.
 | `app-forensics/sleuthkit` | Gentoo (official) | Forked, maintainer reassigned. Carries local patches: refreshed `exclude-usr-local`, plus `gnuconfig_update` on the bundled libewf so `USE=ewf` builds on `aarch64`/`musl` |
 | `app-emulation/vmware-modules` | local | Tracks https://github.com/alex-moch/vmware-modules |
 | `app-emulation/vmware-workstation` | hybrid: nest + pg_overlay + pf4public | Heavy local rework |
+| `app-misc/claude-desktop` | local | Written from scratch — no upstream ebuild reference. Repackages Anthropic's official `.deb` (a prebuilt Electron bundle) into `/opt`. `RDEPEND` derived from the shipped binaries' ELF `NEEDED` set; the Debian maintainer scripts (AppArmor userns profile, apt-repo registration) are intentionally dropped as Debian-specific. Docs at https://code.claude.com/docs/en/desktop-linux |
 | `dev-debug/pwndbg` | Gentoo (official) | Version-pinned fork, now **ahead** of the official tree and carrying local patches (capstone de-vendor via `src_prepare`, `niche-elf` dep, `pycparser` floor). No longer byte-identical to upstream — do not assume a clean diff/rebase |
 | `dev-python/niche-elf` | local | Created here from pwndbg's PyPI dependency (upstream `github.com/pwndbg/niche-elf`); pure-Python |
 | `dev-util/Tensile` | Gentoo (official) | Temporary local hold — do not update; remove once the official tree carries a sufficient version |
@@ -117,6 +118,7 @@ release (excluding pre-releases).
 | `app-emulation/vmware-modules` | `https://api.github.com/repos/alex-moch/vmware-modules/commits` | Tracks `master`; ebuild's `COMMIT=` should match the first `sha` in the JSON response |
 | `app-emulation/vmware-workstation` | `https://softwareupdate.broadcom.com/cds/vmw-desktop/info-only/ws-linux/8.0.0/metadata.xml.gz` | See discovery chain below |
 | `app-forensics/sleuthkit` | `https://api.github.com/repos/sleuthkit/sleuthkit/releases/latest` | Tag format `sleuthkit-X.Y.Z`; ebuild version is the `X.Y.Z` part. On bump, re-check `tsk/Makefile.am`'s `-version-info` first field for the `SLOT` subslot |
+| `app-misc/claude-desktop` | `https://downloads.claude.ai/claude-desktop/apt/stable/dists/stable/main/binary-amd64/Packages` | No releases feed — parse the apt `Packages` index. Latest: `curl -fsSL <url> \| awk '/^Version:/{print $2}' \| sort -V \| tail -1`. Distfile is `claude-desktop_${PV}_${arch}.deb` under `.../pool/main/c/claude-desktop/`; the `.deb`'s own `SHA256` is in the same `Packages` block. Since it's a binary repackage, on bump re-scan the bundle's ELF `NEEDED` sonames (`scanelf -qn`) for new library deps before trusting the old `RDEPEND` |
 | `dev-debug/pwndbg` | `https://api.github.com/repos/pwndbg/pwndbg/releases/latest` | Tag format `YYYY.MM.DD`; ebuild version drops the dots. See bump procedure below |
 | `dev-python/niche-elf` | (follows pwndbg) | Version is dictated by pwndbg's `pyproject.toml` pin, not bumped independently |
 | `dev-vcs/gitleaks` | `https://api.github.com/repos/gitleaks/gitleaks/releases/latest` | Tag prefixed with `v` |
