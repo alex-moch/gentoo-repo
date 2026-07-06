@@ -1,0 +1,9 @@
+# Re-add the GNU toolchain that gentoo:features/llvm strips from the stage1
+# bootstrap set. We want gcc[d] present in stage1 so it self-hosts the D
+# frontend from the seed's gcc[d] -- avoiding the gcc-11 bootstrap (broken
+# against kernel headers >= 7.1). Requires seeding stage1 from a stage3 that
+# already carries gcc[d].
+sys-devel/gcc
+sys-devel/gcc-config
+sys-devel/binutils
+sys-devel/binutils-config
