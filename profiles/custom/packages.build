@@ -7,3 +7,6 @@ sys-devel/gcc
 sys-devel/gcc-config
 sys-devel/binutils
 sys-devel/binutils-config
+
+# Ensure that Rust is in the stage1 already.
+dev-lang/rust

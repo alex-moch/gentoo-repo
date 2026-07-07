@@ -4,3 +4,7 @@ sys-apps/util-linux -su
 
 # net-misc/onedrive hard-depends on GDC.
 sys-devel/gcc d
+
+# Baisc setup for Rust, ignore documentation.
+net-misc/curl openssl http2
+dev-lang/rust -doc
