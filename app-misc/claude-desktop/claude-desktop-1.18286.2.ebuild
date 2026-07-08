@@ -31,7 +31,8 @@ QA_PREBUILT="opt/${PN}/*"
 # Runtime libraries the bundle links against (derived from the ELF NEEDED
 # entries of the shipped binaries) plus the helpers it dlopen()s at runtime
 # (libsecret for the keyring, libnotify, libXtst for global hotkeys) and the
-# desktop-integration tools the app shells out to.
+# desktop-integration tools the app shells out to. libcap-ng and libseccomp
+# are pulled in by the bundled `resources/virtiofsd` VM filesystem helper.
 RDEPEND="
 	app-accessibility/at-spi2-core
 	app-crypt/libsecret
@@ -45,6 +46,8 @@ RDEPEND="
 	sys-apps/dbus
 	sys-apps/util-linux
 	sys-apps/xdg-desktop-portal
+	sys-libs/libcap-ng
+	sys-libs/libseccomp
 	virtual/libudev
 	x11-libs/cairo
 	x11-libs/gtk+:3
