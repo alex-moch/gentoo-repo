@@ -2,4 +2,5 @@
 *app-editors/neovim
 *app-misc/zellij
 *app-shells/zsh
+*dev-lang/rust
 *sys-devel/gcc

@@ -8,3 +8,7 @@ sys-devel/gcc d
 # Baisc setup for Rust, ignore documentation.
 net-misc/curl openssl http2
 dev-lang/rust -doc
+
+# Build and boot UKIs with systemd-boot.
+sys-apps/systemd boot ukify
+sys-kernel/installkernel dracut systemd-boot uki ukify
