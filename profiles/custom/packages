@@ -1,6 +1,14 @@
+# Command line.
 *app-admin/sudo-rs
 *app-editors/neovim
 *app-misc/zellij
 *app-shells/zsh
+
+# Toolchain.
 *dev-lang/rust
 *sys-devel/gcc
+
+# Version control.
+*dev-vcs/git
+*dev-vcs/mercurial
+*app-eselect/eselect-repository

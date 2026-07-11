@@ -5,10 +5,15 @@ sys-apps/util-linux -su
 # net-misc/onedrive hard-depends on GDC.
 sys-devel/gcc d
 
-# Baisc setup for Rust, ignore documentation.
+# Basic setup for Rust, ignore documentation.
 net-misc/curl openssl http2
 dev-lang/rust -doc
 
 # Build and boot UKIs with systemd-boot.
 sys-apps/systemd boot ukify
 sys-kernel/installkernel dracut systemd-boot uki ukify
+
+# Git and Mercurial support for eselect-repository.
+dev-vcs/git gpg rust
+dev-vcs/mercurial gpg rust
+app-eselect/eselect-repository git mercurial
