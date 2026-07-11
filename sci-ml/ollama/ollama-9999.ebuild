@@ -15,7 +15,7 @@ HOMEPAGE="https://ollama.com"
 # Pinned llama.cpp revision. Must match the contents of the upstream
 # ${S}/LLAMA_CPP_VERSION file; src_prepare verifies this. llama.cpp tags
 # releases as bNNNN, so the tag doubles as the archive name.
-LLAMA_CPP_COMMIT="b9840"
+LLAMA_CPP_COMMIT="b9888"
 
 if [[ ${PV} == *9999* ]]; then
 	inherit git-r3
