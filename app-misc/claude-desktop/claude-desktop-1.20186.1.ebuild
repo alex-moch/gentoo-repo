@@ -82,7 +82,9 @@ src_install() {
 
 	dosym "${dir}/claude-desktop" /usr/bin/${PN}
 
-	domenu usr/share/applications/${PN}.desktop
+	# Upstream ships the desktop file under a reverse-DNS name rather than
+	# ${PN}; the icon/doc paths still use ${PN}.
+	domenu usr/share/applications/com.anthropic.Claude.desktop
 
 	local size
 	for size in 16 32 48 128 256; do
