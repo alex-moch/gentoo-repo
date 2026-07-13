@@ -1,0 +1,18 @@
+#!/sbin/openrc-run
+# Copyright 2024-2026 Gentoo Authors
+# Distributed under the terms of the GNU General Public License, v2
+
+supervisor=supervise-daemon
+description="Lemonade local LLM server"
+command="/usr/bin/lemond"
+command_user="lemonade:lemonade"
+directory="/var/lib/lemonade"
+
+# lemond refuses to start without these (systemd's RuntimeDirectory=/
+# StateDirectory= set them automatically; OpenRC has no equivalent).
+export RUNTIME_DIRECTORY="/run/lemonade"
+export STATE_DIRECTORY="/var/lib/lemonade"
+
+start_pre() {
+	checkpath -d -o lemonade:lemonade -m 0700 /run/lemonade
+}

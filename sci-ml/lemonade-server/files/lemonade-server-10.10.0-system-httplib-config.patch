@@ -1,0 +1,42 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -130,6 +130,19 @@
+         httplib>=${MIN_HTTPLIB_VERSION})
+     pkg_check_modules(LWS QUIET libwebsockets>=${MIN_LWS_VERSION})
+ endif()
++# Gentoo's cpp-httplib package ships a CMake package config instead of a
++# .pc file, so the pkg_search_module() probe above can't see it; fall back
++# to find_package() before deciding to FetchContent our own copy.
++if(NOT HTTPLIB_FOUND)
++    # No version arg: httplib's Config-mode version file treats differing
++    # minor versions of its pre-1.0 releases as incompatible, which would
++    # reject an installed 0.38.0 against our "0.26.0" floor. Compare
++    # HTTPLIB_VERSION (set by the config) against the floor ourselves instead.
++    find_package(httplib CONFIG QUIET)
++    if(httplib_FOUND AND HTTPLIB_VERSION VERSION_GREATER_EQUAL "${MIN_HTTPLIB_VERSION}")
++        set(HTTPLIB_FOUND TRUE)
++    endif()
++endif()
+ find_path(CLI11_INCLUDE_DIRS "CLI/CLI.hpp")
+ # Verify CLI11 version if found
+ if(CLI11_INCLUDE_DIRS)
+@@ -358,6 +371,11 @@
+         )
+     endif()
+ else()
++    if(TARGET httplib::httplib)
++        # Found via the find_package(httplib CONFIG) fallback above (e.g.
++        # Gentoo, which ships a CMake package config instead of a .pc file).
++        add_library(lemonade-httplib ALIAS httplib::httplib)
++    else()
+     # System cpp-httplib: a local interface target carrying the include dirs
+     # and link lib (empty for a header-only install like Nixpkgs, the compiled
+     # .so on Debian). We deliberately skip HTTPLIB_CFLAGS_OTHER: the .pc Cflags
+@@ -373,6 +391,7 @@
+         target_link_libraries(lemonade-httplib INTERFACE ${HTTPLIB_LIBRARIES})
+         target_link_directories(lemonade-httplib INTERFACE ${HTTPLIB_LIBRARY_DIRS})
+     endif()
++    endif()
+ endif()
+
+ # === libwebsockets (for WebSocket support) ===
