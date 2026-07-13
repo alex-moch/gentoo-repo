@@ -1,0 +1,16 @@
+# This is the toolchain for an agentic-AI dev container (Claude Code). It adds
+# the agent itself plus the search, query, and packaging tools it leans on for
+# overlay work. dev-vcs/git is already provided by the base profile.
+*dev-util/claude-code
+*sys-apps/ripgrep
+*app-misc/jq
+*app-portage/eix
+*app-portage/gentoolkit
+*app-misc/pax-utils
+*dev-util/pkgdev
+*dev-util/pkgcheck
+
+# Provide a system Node with npm for VS Code extensions that shell out to it
+# (some language servers and linters do). claude-code itself is a native binary
+# and does not need it. The npm USE flag is enabled by default.
+*net-libs/nodejs
