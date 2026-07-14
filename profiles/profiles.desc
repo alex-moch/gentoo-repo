@@ -1,3 +1,6 @@
 amd64 custom exp
 amd64 custom/desktop exp
 amd64 custom/agent exp
+amd64 custom/pentest exp
+amd64 custom/forensics exp
+amd64 custom/binary-analysis exp

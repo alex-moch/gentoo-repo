@@ -1,0 +1,49 @@
+# Toolchain for a reverse-engineering / binary-analysis dev container.
+# Debuggers, disassembly, emulation, and fuzzing tooling on top of the base
+# command-line and desktop USE defaults.
+
+# Debuggers
+*dev-debug/gdb
+*dev-debug/pwndbg
+*dev-debug/gef
+*llvm-core/lldb
+*dev-debug/rr
+*dev-debug/strace
+*dev-debug/ltrace
+*dev-debug/valgrind
+
+# Disassembly / decompilation
+*dev-util/radare2
+*dev-util/cutter
+*sys-devel/binutils
+
+# Emulation / instrumentation
+*app-emulation/qemu
+*dev-libs/capstone
+*dev-libs/keystone
+*dev-util/unicorn
+
+# Fuzzing
+*app-forensics/afl
+*app-forensics/aflplusplus
+*app-forensics/honggfuzz
+*app-forensics/radamsa
+
+# Static analysis
+*app-misc/binwalk
+*app-forensics/yara-x
+
+# Hex editors
+*app-editors/wxhexeditor
+*app-editors/hexedit
+
+# Exploit development (overlaps the pentest profile)
+*dev-util/pwntools
+*dev-util/ropper
+
+# Not packaged anywhere reachable from this overlay yet -- write local
+# ebuilds when there's time.
+#   Ghidra
+#   Frida
+#   angr (symbolic-execution / binary analysis framework, pure Python -- pip
+#         package, probably the easiest of this list to turn into an ebuild)

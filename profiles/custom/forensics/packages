@@ -1,0 +1,47 @@
+# Toolchain for an incident-analysis / digital-forensics dev container.
+# Disk, memory, and malware/IOC tooling on top of the base command-line and
+# desktop USE defaults.
+
+# Disk / filesystem
+*app-forensics/sleuthkit
+*app-admin/testdisk
+*app-forensics/foremost
+*app-forensics/scalpel
+*app-forensics/magicrescue
+*sys-fs/dosfstools
+*sys-fs/ntfs3g
+
+# Imaging
+*sys-apps/dcfldd
+*app-forensics/memdump
+
+# Memory forensics
+*app-forensics/volatility3
+
+# Malware / IOC
+*app-forensics/yara
+*app-forensics/yara-x
+*app-antivirus/clamav
+
+# Timeline / artifact parsing
+*app-forensics/dfxml
+*app-forensics/mac-robber
+*app-forensics/rifiuti
+*app-forensics/pasco
+*app-forensics/galleta
+*media-libs/exiftool
+
+# Host integrity / rootkit checks
+*app-forensics/rkhunter
+*app-forensics/chkrootkit
+*app-forensics/aide
+*app-forensics/lynis
+
+# Not packaged anywhere reachable from this overlay yet -- write local
+# ebuilds when there's time.
+#   plaso / log2timeline
+#   bulk_extractor
+#   guymager
+#   Autopsy (GUI frontend for sleuthkit)
+#   velociraptor (endpoint DFIR/hunting agent, single Go binary -- probably
+#                 the easiest of this list to turn into an ebuild)
