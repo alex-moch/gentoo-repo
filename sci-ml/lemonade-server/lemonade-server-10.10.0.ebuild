@@ -13,9 +13,12 @@ S="${WORKDIR}/lemonade-${PV}"
 LICENSE="Apache-2.0"
 SLOT="0"
 KEYWORDS="~amd64"
-IUSE="+systemd"
+IUSE="+systemd +webapp"
 
-RESTRICT="test"
+# network-sandbox: with USE=webapp, the web app's build step runs `npm ci`
+# against the npm registry. Gentoo has no equivalent of cargo.eclass for
+# vendoring npm dependencies offline, so that build is not hermetic.
+RESTRICT="test webapp? ( network-sandbox )"
 
 # dev-cpp/cli11 and dev-cpp/nlohmann_json are header-only libs detected via
 # find_package(); dev-cpp/cpp-httplib ships a CMake package config rather
@@ -40,7 +43,10 @@ RDEPEND="
 	sys-libs/libcap
 	systemd? ( sys-apps/systemd )
 "
-BDEPEND="virtual/pkgconfig"
+BDEPEND="
+	virtual/pkgconfig
+	webapp? ( net-libs/nodejs[npm] )
+"
 
 PATCHES=(
 	"${FILESDIR}/${P}-system-httplib-config.patch"
@@ -49,7 +55,7 @@ PATCHES=(
 
 src_configure() {
 	local mycmakeargs=(
-		-DBUILD_WEB_APP=OFF
+		-DBUILD_WEB_APP=$(usex webapp)
 		-DBUILD_TAURI_APP=OFF
 		-DBUILD_TESTING=OFF
 	)
@@ -80,7 +86,12 @@ pkg_postinst() {
 		einfo "\trc-service ${PN} start   # OpenRC"
 		einfo "\tsystemctl start lemond   # systemd"
 		einfo
-		einfo "The server listens on http://localhost:13305 by default."
+		if use webapp; then
+			einfo "The web UI is at http://localhost:13305 by default."
+		else
+			einfo "The API is at http://localhost:13305 by default (USE=-webapp:"
+			einfo "no web UI, just a static status page)."
+		fi
 		einfo "See https://lemonade-server.ai/docs/ for backend setup (llama.cpp,"
 		einfo "FastFlowLM, RyzenAI, ...) and model management."
 	fi

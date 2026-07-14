@@ -7,14 +7,16 @@
 	</maintainer>
 	<use>
 		<flag name="systemd">Enable journald logging via <pkg>sys-apps/systemd</pkg>'s libsystemd</flag>
+		<flag name="webapp">Build the bundled web UI (requires network access at build time to fetch npm packages; disable for a fully offline/hermetic build with just the API and a static status page)</flag>
 	</use>
 	<longdescription>
 		Lemonade is a local AI server from AMD that runs LLMs, speech, and
 		image-generation models on personal GPUs and NPUs through an
 		OpenAI-compatible API, with pluggable backends such as llama.cpp,
 		whisper.cpp, stable-diffusion.cpp, FastFlowLM, and RyzenAI. This
-		package provides the `lemond` server daemon and the `lemonade` CLI
-		client; the bundled web UI and desktop app are not built.
+		package provides the `lemond` server daemon (which also serves the
+		bundled web UI with USE=webapp) and the `lemonade` CLI client; the
+		separate native Tauri desktop app is not built.
 	</longdescription>
 	<upstream>
 		<remote-id type="github">lemonade-sdk/lemonade</remote-id>
