@@ -1,0 +1,7 @@
+# Copyright 1999-2026 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+# Python bindings needed by dev-util/pwntools' assemble()/disassemble().
+dev-libs/capstone python
+dev-libs/keystone python
+dev-util/unicorn python
