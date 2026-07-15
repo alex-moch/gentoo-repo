@@ -1,9 +1,0 @@
-# Copyright 1999-2026 Gentoo Authors
-# Distributed under the terms of the GNU General Public License v2
-
-# dev-libs/keystone pins PYTHON_COMPAT=( python3_{10..13} ), which excludes
-# the base profile's default python3_14. Add python3_12 alongside it rather
-# than replacing it, since PYTHON_TARGETS stacks additively across the
-# profile chain. See custom/pentest/make.defaults, which needs this for the
-# same reason (capstone/keystone/unicorn python bindings for pwntools).
-PYTHON_TARGETS="python3_12"
