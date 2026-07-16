@@ -316,7 +316,20 @@ src_compile() {
 
 	local runner
 	for runner in $(_ollama_active_runners); do
-		_ollama_native_build "${runner}"
+		if [[ ${runner} == vulkan ]]; then
+			# ggml-vulkan compiles one generated wrapper TU per compute
+			# kernel, each embedding a compiled SPIR-V blob as a large
+			# constant array. ThinLTO's cross-module analysis over ~140 such
+			# TUs blows up to tens of CPU-minutes on a single core before
+			# the final link even starts -- the same class of problem as the
+			# rocm CXXFLAGS filtering above (bug 963401), just untriggered
+			# there since GGML_HIP doesn't generate per-kernel TUs. Filter
+			# LTO for this runner only; cpu/cuda/rocm are unaffected since
+			# the subshell doesn't leak the change back.
+			( filter-lto; _ollama_native_build "${runner}" )
+		else
+			_ollama_native_build "${runner}"
+		fi
 	done
 }
 
