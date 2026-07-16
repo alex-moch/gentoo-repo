@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>gentoo@alexmoch.com</email>
+		<name>Alexander Moch</name>
+	</maintainer>
+	<longdescription>
+		zettarepl drives ZFS snapshot creation, retention, and PUSH/PULL
+		replication over SSH; it is the replication engine used internally
+		by TrueNAS SCALE. This packaging covers standalone use of the
+		`zettarepl` CLI and the plain `ssh`/local transports only. The
+		optional `ssh+netcat` transport needs TrueNAS's own `py-libzfs`
+		C-extension binding, which is not packaged in Gentoo or GURU and is
+		therefore unsupported here; likewise the optional snapshot
+		"removal dates" integration needs `truenas_api_client`, which talks
+		to a TrueNAS middleware socket that does not exist outside TrueNAS
+		itself.
+	</longdescription>
+	<use>
+		<flag name="lz4">Support the "lz4" compression transport via <pkg>app-arch/lz4</pkg></flag>
+		<flag name="mbuffer">Support the "mbuffer" throughput buffer via <pkg>sys-block/mbuffer</pkg></flag>
+		<flag name="pigz">Support the "pigz" compression transport via <pkg>app-arch/pigz</pkg></flag>
+		<flag name="plzip">Support the "plzip" compression transport via <pkg>app-arch/plzip</pkg></flag>
+	</use>
+	<upstream>
+		<remote-id type="github">truenas/zettarepl</remote-id>
+	</upstream>
+</pkgmetadata>
