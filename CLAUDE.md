@@ -100,7 +100,8 @@ when looking up upstream changes or comparing against the source ebuilds.
 | `dev-util/semgrep-core-bin` | Pentoo | Forked, maintainer reassigned, heavily reworked. Upstream's wheel now bundles `semgrep-core`'s native shared-lib dependencies (`bin/libs/`) instead of linking the host's — install layout changed from a flat `dobin` to a private `/usr/libexec/semgrep-core-bin/` dir + symlink. See "semgrep bump procedure" below |
 | `dev-vcs/gitleaks` | Pentoo | Forked, maintainer reassigned |
 | `net-firewall/littlesnitch` | local | Written from scratch — no upstream ebuild reference; product page at https://obdev.at/products/littlesnitch-linux/index.html |
-| `sci-ml/lemonade-server` | local | Written from scratch — no Gentoo/GURU ebuild exists upstream; used Arch's official `lemonade` PKGBUILD as boilerplate. Builds only `lemond`/`lemonade` (server + CLI); the Tauri desktop app is intentionally out of scope. Carries two local patches (`find_package(CONFIG)` fallback for `dev-cpp/cpp-httplib`, since Gentoo ships a CMake package config rather than a `.pc` file; a `pkg_search_module` fix for `mbedcrypto`, since Gentoo's `net-libs/mbedtls` slots it as `mbedcrypto-3`). `USE=webapp` (default on) gates the bundled web UI, which needs `net-libs/nodejs[npm]` and `RESTRICT="network-sandbox"` — Gentoo has no `cargo.eclass` equivalent for vendoring npm deps offline. See "Lemonade bump procedure" below |
+| `sci-ml/lemonade-desktop` | local | Written from scratch — the native Tauri/WebKitGTK desktop client (`src/app` in the same monorepo as `sci-ml/lemonade-server`, a thin WebView pointed at it; doesn't bundle the server). Uses `cargo.eclass` with a real, fully-generated `CRATES` list (~590 entries, parsed from `src-tauri/Cargo.lock`) for fully offline/hermetic Rust vendoring — unlike the npm side, crates.io permanently hosts every published version at a fixed URL, so this needed no self-hosting, just the generated list. The npm side (`src/app`'s own React/webpack frontend, separate from the server's) still needs `RESTRICT="network-sandbox"` same as `lemonade-server`'s `USE=webapp`. `LICENSE` is the union of every vendored crate's own declared license (scanned from each fetched `.crate`'s `Cargo.toml`, not guessed) plus Apache-2.0 for the app itself. See "Lemonade bump procedure" below |
+| `sci-ml/lemonade-server` | local | Written from scratch — no Gentoo/GURU ebuild exists upstream; used Arch's official `lemonade` PKGBUILD as boilerplate. Builds only `lemond`/`lemonade` (server + CLI); the Tauri desktop app is `sci-ml/lemonade-desktop`, a separate package. Carries two local patches (`find_package(CONFIG)` fallback for `dev-cpp/cpp-httplib`, since Gentoo ships a CMake package config rather than a `.pc` file; a `pkg_search_module` fix for `mbedcrypto`, since Gentoo's `net-libs/mbedtls` slots it as `mbedcrypto-3`). `USE=webapp` (default on) gates the bundled web UI, which needs `net-libs/nodejs[npm]` and `RESTRICT="network-sandbox"` — Gentoo has no `cargo.eclass` equivalent for vendoring npm deps offline. See "Lemonade bump procedure" below |
 | `sci-ml/ollama` | GURU | Forked, maintainer reassigned, refactored |
 
 ### VMware Workstation version encoding
@@ -138,6 +139,7 @@ release (excluding pre-releases).
 | `dev-util/semgrep-core-bin` | (follows `dev-python/semgrep`) | Always bump in lockstep with `dev-python/semgrep` — same `PV` |
 | `dev-vcs/gitleaks` | `https://api.github.com/repos/gitleaks/gitleaks/releases/latest` | Tag prefixed with `v` |
 | `net-firewall/littlesnitch` | `https://obdev.at/products/littlesnitch-linux/download.html` | Parse the download URLs in the page (e.g. `littlesnitch-1.0.5-1-x86_64.pkg.tar.zst`); no machine-readable feed |
+| `sci-ml/lemonade-desktop` | (follows `sci-ml/lemonade-server`) | Always bump in lockstep with `sci-ml/lemonade-server` — same `PV`, same monorepo tag. See "Lemonade bump procedure" below — the `CRATES` list needs fully regenerating from the new tag's `src-tauri/Cargo.lock`, not hand-edited |
 | `sci-ml/lemonade-server` | `https://api.github.com/repos/lemonade-sdk/lemonade/releases/latest` | Tag prefixed with `v`. See "Lemonade bump procedure" below before touching this — the two local patches and `USE=webapp` wiring need re-verifying, not just the version string |
 | `sci-ml/ollama` | `https://api.github.com/repos/ollama/ollama/releases/latest` | Tag prefixed with `v`; check `https://api.github.com/repos/ollama/ollama/releases` (without `/latest`) to also see pre-releases |
 
@@ -332,8 +334,48 @@ future bump adds new npm dependencies, nothing here needs updating
 way to vendor a `node_modules` tarball offline, revisit this — a fully
 hermetic build would be preferable to opting out of network sandboxing.
 
-The Tauri desktop app is deliberately not built (`BUILD_TAURI_APP` is
-`OFF` by default upstream too). Packaging it would need `dev-lang/rust`
-via `cargo.eclass` for the Rust side (a well-trodden path) plus another
-non-hermetic npm build for its own `src/app` frontend — revisit only if
-actually wanted, per the earlier scope conversation.
+The Tauri desktop app is packaged separately as `sci-ml/lemonade-desktop`
+(`BUILD_TAURI_APP` stays `OFF` for `lemonade-server` — the desktop
+package drives `npm`/`cargo` directly rather than going through CMake,
+since the `tauri-app` CMake target's own `DEPENDS` only covers `src/app`'s
+files, not `lemond`/`lemonade`, so there's nothing to gain from routing
+through the shared build tree).
+
+`sci-ml/lemonade-desktop`'s `CRATES` list (~590 entries) must be fully
+regenerated from `src-tauri/Cargo.lock` on every bump — don't hand-edit
+it. All 590 are plain crates.io registry entries (no git deps as of
+11.0.0; if a future bump adds one, it needs `GIT_CRATES` instead). To
+regenerate:
+
+```
+tar xzf <new-tarball> lemonade-<PV>/src/app/src-tauri/Cargo.lock
+python3 -c '
+import re
+content = open("Cargo.lock").read()
+crates = []
+for b in content.split("[[package]]")[1:]:
+    name = re.search(r"^name = \"([^\"]+)\"", b, re.M)
+    ver = re.search(r"^version = \"([^\"]+)\"", b, re.M)
+    src = re.search(r"^source = \"([^\"]+)\"", b, re.M)
+    if src:  # skip the local lemonade-app package itself
+        crates.append(f"{name.group(1)}@{ver.group(1)}")
+print("\n".join(sorted(crates)))
+'
+```
+
+Also re-verify on every bump:
+- **`RUST_MIN_VER`** — don't just copy `src-tauri/Cargo.toml`'s
+  `rust-version` (currently `1.77.2`); a vendored *dependency* crate can
+  (and did, going from 10.10.0 to 11.0.0) declare a higher MSRV than
+  Tauri's own floor. rust.eclass emits a QA notice naming the actual
+  floor after a build — trust that over Tauri's Cargo.toml.
+- **`LICENSE`** — re-scan every vendored crate's own `Cargo.toml` license
+  field after fetching (a one-off `tar -xzOf <crate>.crate
+  <crate>-<ver>/Cargo.toml | grep license` loop over `${CRATES}`), don't
+  assume the existing license set still covers a changed dependency
+  tree. New crates can introduce license atoms not yet in the `licenses/`
+  directory used by either repo.
+- The `pkgcheck` QA notice about ">300 CRATES, provide a crate tarball
+  instead" is expected and intentionally not acted on — a single vendor
+  tarball would mean self-hosting it somewhere, which defeats the point
+  of using crates.io's own permanent per-version hosting instead.

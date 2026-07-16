@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>gentoo@alexmoch.com</email>
+		<name>Alexander Moch</name>
+	</maintainer>
+	<longdescription>
+		The native Tauri/WebKitGTK desktop client for Lemonade, AMD's local
+		LLM server. A thin WebView wrapper around <pkg>sci-ml/lemonade-server</pkg>'s
+		web UI — it does not bundle the server itself.
+	</longdescription>
+	<upstream>
+		<remote-id type="github">lemonade-sdk/lemonade</remote-id>
+	</upstream>
+</pkgmetadata>
