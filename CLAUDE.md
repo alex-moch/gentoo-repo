@@ -78,8 +78,10 @@ when looking up upstream changes or comparing against the source ebuilds.
 
 | Package | Origin | Notes |
 |---|---|---|
+| `acct-group/lemonade` | local | Created here, mirrors `acct-group/ollama` |
 | `acct-group/ollama` | GURU | Forked, maintainer reassigned |
 | `acct-group/vmware` | local | Created here |
+| `acct-user/lemonade` | local | Created here, mirrors `acct-user/ollama`; home `/var/lib/lemonade` |
 | `acct-user/ollama` | GURU | Forked, maintainer reassigned |
 | `app-forensics/sleuthkit` | Gentoo (official) | Forked, maintainer reassigned. Carries local patches: refreshed `exclude-usr-local`, plus `gnuconfig_update` on the bundled libewf so `USE=ewf` builds on `aarch64`/`musl` |
 | `app-emulation/vmware-modules` | local | Tracks https://github.com/alex-moch/vmware-modules |
@@ -98,6 +100,7 @@ when looking up upstream changes or comparing against the source ebuilds.
 | `dev-util/semgrep-core-bin` | Pentoo | Forked, maintainer reassigned, heavily reworked. Upstream's wheel now bundles `semgrep-core`'s native shared-lib dependencies (`bin/libs/`) instead of linking the host's — install layout changed from a flat `dobin` to a private `/usr/libexec/semgrep-core-bin/` dir + symlink. See "semgrep bump procedure" below |
 | `dev-vcs/gitleaks` | Pentoo | Forked, maintainer reassigned |
 | `net-firewall/littlesnitch` | local | Written from scratch — no upstream ebuild reference; product page at https://obdev.at/products/littlesnitch-linux/index.html |
+| `sci-ml/lemonade-server` | local | Written from scratch — no Gentoo/GURU ebuild exists upstream; used Arch's official `lemonade` PKGBUILD as boilerplate. Builds only `lemond`/`lemonade` (server + CLI); the Tauri desktop app is intentionally out of scope. Carries two local patches (`find_package(CONFIG)` fallback for `dev-cpp/cpp-httplib`, since Gentoo ships a CMake package config rather than a `.pc` file; a `pkg_search_module` fix for `mbedcrypto`, since Gentoo's `net-libs/mbedtls` slots it as `mbedcrypto-3`). `USE=webapp` (default on) gates the bundled web UI, which needs `net-libs/nodejs[npm]` and `RESTRICT="network-sandbox"` — Gentoo has no `cargo.eclass` equivalent for vendoring npm deps offline. See "Lemonade bump procedure" below |
 | `sci-ml/ollama` | GURU | Forked, maintainer reassigned, refactored |
 
 ### VMware Workstation version encoding
@@ -135,6 +138,7 @@ release (excluding pre-releases).
 | `dev-util/semgrep-core-bin` | (follows `dev-python/semgrep`) | Always bump in lockstep with `dev-python/semgrep` — same `PV` |
 | `dev-vcs/gitleaks` | `https://api.github.com/repos/gitleaks/gitleaks/releases/latest` | Tag prefixed with `v` |
 | `net-firewall/littlesnitch` | `https://obdev.at/products/littlesnitch-linux/download.html` | Parse the download URLs in the page (e.g. `littlesnitch-1.0.5-1-x86_64.pkg.tar.zst`); no machine-readable feed |
+| `sci-ml/lemonade-server` | `https://api.github.com/repos/lemonade-sdk/lemonade/releases/latest` | Tag prefixed with `v`. See "Lemonade bump procedure" below before touching this — the two local patches and `USE=webapp` wiring need re-verifying, not just the version string |
 | `sci-ml/ollama` | `https://api.github.com/repos/ollama/ollama/releases/latest` | Tag prefixed with `v`; check `https://api.github.com/repos/ollama/ollama/releases` (without `/latest`) to also see pre-releases |
 
 `acct-group/*` and `acct-user/*` packages have no upstream — they are
@@ -278,3 +282,58 @@ version of any desktop hypervisor product:
    `<buildNumber>`, and `<timeStamp>` fields are stale templates that
    Broadcom inherited from VMware's older CDS infrastructure and never
    refreshed — do not trust them.
+
+### Lemonade bump procedure
+
+`sci-ml/lemonade-server`'s root `CMakeLists.txt` tries system packages
+first (`find_package`/`pkg_check_modules`) and falls back to
+`FetchContent` (a live git clone — not viable in the portage sandbox)
+for each one it doesn't find. Two of those probes don't recognize this
+overlay's actual dependencies, and both fixes are line-anchored patches
+that can silently stop applying on a bump:
+
+- **`dev-cpp/cpp-httplib`** ships a CMake package config
+  (`/usr/lib64/cmake/httplib/httplibConfig.cmake`) instead of a `.pc`
+  file, so upstream's `pkg_search_module(HTTPLIB QUIET cpp-httplib
+  httplib)` never finds it and falls through to `FetchContent`, which
+  itself dies on a real upstream bug (an unquoted, empty
+  `${CMAKE_SYSTEM_VERSION}` inside an `if()` — Gentoo's toolchain file
+  sets `CMAKE_SYSTEM_NAME` explicitly, which puts CMake in
+  pseudo-cross-compile mode and leaves `CMAKE_SYSTEM_VERSION` unset).
+  `files/lemonade-server-*-system-httplib-config.patch` adds a
+  `find_package(httplib CONFIG QUIET)` fallback, comparing
+  `HTTPLIB_VERSION` manually against the floor instead of passing a
+  version arg to `find_package()` — httplib's version file only
+  accepts requests with a matching major **and minor** (pre-1.0 semver),
+  which would reject a newer installed version against an older floor.
+- **`net-libs/mbedtls`** is SLOT `3` and names its pkg-config module,
+  headers, and library `mbedcrypto-3`/`mbedtls3/mbedtls/md.h`/
+  `libmbedcrypto-3.so`, not plain
+  `mbedcrypto` — same failure mode, different subsystem
+  (`src/cpp/cli/CMakeLists.txt`'s digest-verification dependency).
+  `files/lemonade-server-*-system-mbedcrypto-slot.patch` changes that
+  one `pkg_check_modules` call to `pkg_search_module(... mbedcrypto
+  mbedcrypto-3)`.
+
+On every bump: diff the upstream `CMakeLists.txt`/`cli/CMakeLists.txt`
+against the patched lines (context drift breaks the patch silently if
+upstream refactors nearby code) and re-run a real `emerge` — a failed
+`FetchContent` network fetch only surfaces when `FEATURES=network-sandbox`
+actually works, which it does **not** in some sandboxed dev environments
+(`Unable to unshare: EPERM`), so a build that "succeeds" there can still
+fail on a real Gentoo host. Don't trust a clean build log without
+checking for `Using system X` lines for every dependency.
+
+`USE=webapp` runs `npm ci` against the npm registry inside
+`BuildWebApp.cmake` — Gentoo has no vendoring eclass for npm, so this
+is why `RESTRICT="network-sandbox"` is conditional on the flag. If a
+future bump adds new npm dependencies, nothing here needs updating
+(the lockfile-driven `npm ci` handles it), but if upstream ever adds a
+way to vendor a `node_modules` tarball offline, revisit this — a fully
+hermetic build would be preferable to opting out of network sandboxing.
+
+The Tauri desktop app is deliberately not built (`BUILD_TAURI_APP` is
+`OFF` by default upstream too). Packaging it would need `dev-lang/rust`
+via `cargo.eclass` for the Rust side (a well-trodden path) plus another
+non-hermetic npm build for its own `src/app` frontend — revisit only if
+actually wanted, per the earlier scope conversation.
