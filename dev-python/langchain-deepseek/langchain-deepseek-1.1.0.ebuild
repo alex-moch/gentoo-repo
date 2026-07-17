@@ -22,6 +22,8 @@ RESTRICT="test"
 
 RDEPEND="
 	>=dev-python/langchain-core-1.4.0[${PYTHON_USEDEP}]
+	<dev-python/langchain-core-2[${PYTHON_USEDEP}]
 	>=dev-python/langchain-openai-1.1.0[${PYTHON_USEDEP}]
+	<dev-python/langchain-openai-2[${PYTHON_USEDEP}]
 "
 DEPEND="${RDEPEND}"

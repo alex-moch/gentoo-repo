@@ -29,6 +29,7 @@ RDEPEND="
 	>=dev-python/requests-2.28.1[${PYTHON_USEDEP}]
 	dev-python/sniffio[${PYTHON_USEDEP}]
 	>=dev-python/tenacity-8.2.3[${PYTHON_USEDEP}]
+	<dev-python/tenacity-9.2[${PYTHON_USEDEP}]
 	>=dev-python/typing-extensions-4.14.0[${PYTHON_USEDEP}]
 	>=dev-python/websockets-13.0.0[${PYTHON_USEDEP}]
 "
@@ -37,12 +38,11 @@ DEPEND="${RDEPEND}"
 src_prepare() {
 	distutils-r1_src_prepare
 
-	# Upstream ships setup.cfg but no setup.py and no build-backend key in
-	# pyproject.toml, so gpep517 can't determine a backend at all (the
-	# eclass's legacy-setuptools fallback only kicks in when setup.py
-	# exists). Add the trivial stub setup.cfg-driven packages expect.
-	cat <<-EOF > setup.py || die
-	from setuptools import setup
-	setup()
-	EOF
+	# Upstream's pyproject.toml has a [build-system] table but omits the
+	# build-backend key, so the PEP 517 build cannot determine a backend.
+	# Insert the standard setuptools backend into the existing table
+	# (matching dev-python/niche-elf's fix for the same upstream gap).
+	grep -q '^build-backend' pyproject.toml || sed -i \
+		'/^\[build-system\]/a build-backend = "setuptools.build_meta"' \
+		pyproject.toml || die
 }

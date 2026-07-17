@@ -28,6 +28,7 @@ RDEPEND="
 	>=dev-python/pydantic-2.7.4[${PYTHON_USEDEP}]
 	>=dev-python/pyyaml-5.3.0[${PYTHON_USEDEP}]
 	>=dev-python/tenacity-8.1.0[${PYTHON_USEDEP}]
+	<dev-python/tenacity-10[${PYTHON_USEDEP}]
 	>=dev-python/typing-extensions-4.7.0[${PYTHON_USEDEP}]
 	>=dev-python/uuid-utils-0.12.0[${PYTHON_USEDEP}]
 "

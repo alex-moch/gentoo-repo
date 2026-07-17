@@ -25,3 +25,6 @@ RDEPEND="
 	>=dev-python/pydantic-2.9[${PYTHON_USEDEP}]
 "
 DEPEND="${RDEPEND}"
+BDEPEND="
+	dev-python/hatch-vcs[${PYTHON_USEDEP}]
+"

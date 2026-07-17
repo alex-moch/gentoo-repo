@@ -25,5 +25,6 @@ RDEPEND="
 	>=dev-python/google-genai-1.65.0[${PYTHON_USEDEP}]
 	>=dev-python/langchain-core-1.4.7[${PYTHON_USEDEP}]
 	>=dev-python/pydantic-2.0.0[${PYTHON_USEDEP}]
+	<dev-python/pydantic-3[${PYTHON_USEDEP}]
 "
 DEPEND="${RDEPEND}"

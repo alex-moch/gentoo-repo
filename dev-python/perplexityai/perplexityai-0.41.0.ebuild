@@ -29,3 +29,6 @@ RDEPEND="
 	>=dev-python/typing-extensions-4.14[${PYTHON_USEDEP}]
 "
 DEPEND="${RDEPEND}"
+BDEPEND="
+	dev-python/hatch-fancy-pypi-readme[${PYTHON_USEDEP}]
+"

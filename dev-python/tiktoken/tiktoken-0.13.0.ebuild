@@ -63,7 +63,6 @@ RDEPEND="
 	dev-python/regex[${PYTHON_USEDEP}]
 	dev-python/requests[${PYTHON_USEDEP}]
 "
-DEPEND="${RDEPEND}"
 BDEPEND="
 	>=dev-python/setuptools-rust-1.5.2[${PYTHON_USEDEP}]
 "
