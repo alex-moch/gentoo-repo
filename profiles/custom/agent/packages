@@ -14,3 +14,9 @@
 # (some language servers and linters do). claude-code itself is a native binary
 # and does not need it. The npm USE flag is enabled by default.
 *net-libs/nodejs
+
+# Python package managers so the agent can bootstrap arbitrary tooling at
+# runtime (installing a one-off scanner, a project's own requirements, etc.)
+# without needing a new ebuild for every such tool.
+*dev-python/pip
+*dev-python/uv
