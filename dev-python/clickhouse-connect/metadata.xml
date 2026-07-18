@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>gentoo@alexmoch.com</email>
+		<name>Alexander Moch</name>
+	</maintainer>
+	<upstream>
+		<remote-id type="github">ClickHouse/clickhouse-connect</remote-id>
+		<remote-id type="pypi">clickhouse-connect</remote-id>
+	</upstream>
+</pkgmetadata>
