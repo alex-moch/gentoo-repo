@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>gentoo@alexmoch.com</email>
+		<name>Alexander Moch</name>
+	</maintainer>
+	<upstream>
+		<remote-id type="pypi">asn1tools</remote-id>
+		<remote-id type="github">eerimoq/asn1tools</remote-id>
+	</upstream>
+	<use>
+		<flag name="shell">Use <pkg>dev-python/prompt-toolkit</pkg> for the shell subcommand</flag>
+		<flag name="cache">Use <pkg>dev-python/diskcache</pkg> to speed up repeated parses</flag>
+	</use>
+</pkgmetadata>

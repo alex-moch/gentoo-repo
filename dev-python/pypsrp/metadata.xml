@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>gentoo@alexmoch.com</email>
+		<name>Alexander Moch</name>
+	</maintainer>
+	<use>
+		<flag name="credssp">Add CredSSP support</flag>
+	</use>
+	<upstream>
+		<remote-id type="github">jborean93/pypsrp</remote-id>
+		<remote-id type="pypi">pypsrp</remote-id>
+	</upstream>
+</pkgmetadata>
