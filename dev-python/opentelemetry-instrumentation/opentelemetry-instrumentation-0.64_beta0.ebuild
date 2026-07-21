@@ -28,6 +28,7 @@ KEYWORDS="~amd64 ~arm64 ~x86"
 
 RDEPEND="
 	>=dev-python/opentelemetry-api-1.4[${PYTHON_USEDEP}]
+	<dev-python/opentelemetry-api-2[${PYTHON_USEDEP}]
 	~dev-python/opentelemetry-semantic-conventions-1.43.0[${PYTHON_USEDEP}]
 	>=dev-python/wrapt-1.0.0[${PYTHON_USEDEP}]
 	<dev-python/wrapt-3.0.0[${PYTHON_USEDEP}]

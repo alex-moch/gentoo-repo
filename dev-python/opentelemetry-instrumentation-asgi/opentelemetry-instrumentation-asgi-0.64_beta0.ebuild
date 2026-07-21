@@ -29,6 +29,7 @@ KEYWORDS="~amd64 ~arm64 ~x86"
 RDEPEND="
 	>=dev-python/asgiref-3.0[${PYTHON_USEDEP}]
 	>=dev-python/opentelemetry-api-1.12[${PYTHON_USEDEP}]
+	<dev-python/opentelemetry-api-2[${PYTHON_USEDEP}]
 	~dev-python/opentelemetry-instrumentation-${PV}[${PYTHON_USEDEP}]
 	~dev-python/opentelemetry-semantic-conventions-1.43.0[${PYTHON_USEDEP}]
 	~dev-python/opentelemetry-util-http-${PV}[${PYTHON_USEDEP}]

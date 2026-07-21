@@ -39,7 +39,9 @@ KEYWORDS="~amd64 ~arm64 ~x86"
 
 RDEPEND="
 	>=dev-python/opentelemetry-api-1.12[${PYTHON_USEDEP}]
-	~dev-python/opentelemetry-sdk-1.43.0[${PYTHON_USEDEP}]
+	<dev-python/opentelemetry-api-2[${PYTHON_USEDEP}]
+	>=dev-python/opentelemetry-sdk-1.43.0[${PYTHON_USEDEP}]
+	<dev-python/opentelemetry-sdk-1.44[${PYTHON_USEDEP}]
 	>=dev-python/prometheus-client-0.5.0[${PYTHON_USEDEP}]
 	<dev-python/prometheus-client-1.0.0[${PYTHON_USEDEP}]
 "

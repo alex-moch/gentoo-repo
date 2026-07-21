@@ -32,10 +32,13 @@ KEYWORDS="~amd64 ~arm64 ~x86"
 # moot in practice since the tree's dev-python/grpcio is already 1.82.1.
 RDEPEND="
 	>=dev-python/googleapis-common-protos-1.57[${PYTHON_USEDEP}]
+	<dev-python/googleapis-common-protos-2[${PYTHON_USEDEP}]
 	>=dev-python/grpcio-1.75.1[${PYTHON_USEDEP}]
-	~dev-python/opentelemetry-api-${PV}[${PYTHON_USEDEP}]
+	>=dev-python/opentelemetry-api-1.15[${PYTHON_USEDEP}]
+	<dev-python/opentelemetry-api-2[${PYTHON_USEDEP}]
 	~dev-python/opentelemetry-proto-${PV}[${PYTHON_USEDEP}]
-	~dev-python/opentelemetry-sdk-${PV}[${PYTHON_USEDEP}]
+	>=dev-python/opentelemetry-sdk-1.43.0[${PYTHON_USEDEP}]
+	<dev-python/opentelemetry-sdk-1.44[${PYTHON_USEDEP}]
 	~dev-python/opentelemetry-exporter-otlp-proto-common-${PV}[${PYTHON_USEDEP}]
 	>=dev-python/typing-extensions-4.6.0[${PYTHON_USEDEP}]
 "
