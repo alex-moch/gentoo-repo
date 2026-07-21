@@ -70,8 +70,8 @@ RDEPEND="
 	<dev-python/aiofile-4[${PYTHON_USEDEP}]
 	>=dev-python/uvicorn-0.30.0[${PYTHON_USEDEP}]
 	<dev-python/uvicorn-1[${PYTHON_USEDEP}]
-	>=www-servers/gunicorn-25.3.0
-	<www-servers/gunicorn-27
+	>=www-servers/gunicorn-25.3.0[${PYTHON_USEDEP}]
+	<www-servers/gunicorn-27[${PYTHON_USEDEP}]
 	>=dev-python/langchain-1.3.0[${PYTHON_USEDEP}]
 	<dev-python/langchain-1.4[${PYTHON_USEDEP}]
 	>=dev-python/langchain-community-0.4.1[${PYTHON_USEDEP}]
@@ -211,7 +211,6 @@ RDEPEND="
 	<dev-python/langgraph-checkpoint-5[${PYTHON_USEDEP}]
 	>=sci-ml/transformers-5.3.0
 "
-DEPEND="${RDEPEND}"
 
 RESTRICT="test"
 

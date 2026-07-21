@@ -19,6 +19,10 @@ KEYWORDS="~amd64"
 
 RESTRICT="test"
 
+# Real requires_dist is packaging<25,>=23.2; the tree only has
+# packaging-26.1/26.2, so the real ceiling is currently unsatisfiable --
+# loosened, same class of deviation as the wcmatch floor relaxation
+# documented in CLAUDE.md's semgrep bump procedure.
 RDEPEND="
 	>=dev-python/packaging-23.2[${PYTHON_USEDEP}]
 	>=dev-python/requests-2[${PYTHON_USEDEP}]

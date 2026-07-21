@@ -49,7 +49,7 @@ RDEPEND="
 	>=dev-python/asyncer-0.0.8[${PYTHON_USEDEP}]
 	<dev-python/asyncer-1[${PYTHON_USEDEP}]
 	>=dev-python/cachetools-6.0.0[${PYTHON_USEDEP}]
-	dev-python/chardet[${PYTHON_USEDEP}]
+	>=dev-python/chardet-6.0.0_p1[${PYTHON_USEDEP}]
 	>=dev-python/cryptography-48.0.1[${PYTHON_USEDEP}]
 	>=dev-python/defusedxml-0.7.1[${PYTHON_USEDEP}]
 	<dev-python/defusedxml-1[${PYTHON_USEDEP}]
@@ -103,9 +103,9 @@ RDEPEND="
 	<dev-python/python-dotenv-2[${PYTHON_USEDEP}]
 	>=dev-python/pyyaml-6.0.0[${PYTHON_USEDEP}]
 	<dev-python/pyyaml-7[${PYTHON_USEDEP}]
-	dev-python/rich[${PYTHON_USEDEP}]
+	>=dev-python/rich-13.0.0[${PYTHON_USEDEP}]
 	>=dev-python/setuptools-80.0.0[${PYTHON_USEDEP}]
-	dev-python/structlog[${PYTHON_USEDEP}]
+	>=dev-python/structlog-25.4.0[${PYTHON_USEDEP}]
 	>=dev-python/tomli-2.2.1[${PYTHON_USEDEP}]
 	<dev-python/tomli-3[${PYTHON_USEDEP}]
 	>=dev-python/typer-0.16.0[${PYTHON_USEDEP}]
@@ -119,7 +119,6 @@ RDEPEND="
 	>=dev-python/wheel-0.46.2[${PYTHON_USEDEP}]
 	<dev-python/wheel-1[${PYTHON_USEDEP}]
 "
-DEPEND="${RDEPEND}"
 
 RESTRICT="test"
 

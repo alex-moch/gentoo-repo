@@ -21,6 +21,10 @@ KEYWORDS="~amd64"
 
 RESTRICT="test"
 
+# Real requires_dist is caio~=0.9.0 (>=0.9.0,<0.10.0), but the tree/this
+# overlay only carries caio-0.10.2, so the real ceiling is currently
+# unsatisfiable -- loosened, same class of deviation as the wcmatch
+# floor relaxation documented in CLAUDE.md's semgrep bump procedure.
 RDEPEND="
 	>=dev-python/caio-0.9.0[${PYTHON_USEDEP}]
 "

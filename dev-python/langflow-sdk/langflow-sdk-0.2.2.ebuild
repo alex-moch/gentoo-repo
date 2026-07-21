@@ -31,6 +31,7 @@ KEYWORDS="~amd64"
 # the equivalent qdrant-client/lfx situation elsewhere in this overlay.
 RDEPEND="
 	>=dev-python/httpx-0.24.0[${PYTHON_USEDEP}]
+	<dev-python/httpx-1[${PYTHON_USEDEP}]
 	dev-python/h2[${PYTHON_USEDEP}]
 	>=dev-python/pydantic-2.0.0[${PYTHON_USEDEP}]
 	<dev-python/pydantic-3[${PYTHON_USEDEP}]
@@ -39,8 +40,8 @@ RDEPEND="
 	>=dev-python/tomli-2.2.1[${PYTHON_USEDEP}]
 	<dev-python/tomli-3[${PYTHON_USEDEP}]
 	>=dev-python/typing-extensions-4.14.0[${PYTHON_USEDEP}]
+	<dev-python/typing-extensions-5[${PYTHON_USEDEP}]
 "
-DEPEND="${RDEPEND}"
 
 RESTRICT="test"
 
