@@ -13,6 +13,13 @@ DISTUTILS_USE_PEP517=no
 
 inherit distutils-r1 pypi
 
+DESCRIPTION="AI-native open-source embedding database"
+HOMEPAGE="
+	https://www.trychroma.com/
+	https://github.com/chroma-core/chroma
+	https://pypi.org/project/chromadb/
+"
+
 # cp39-abi3: built against the stable Python ABI, so this one wheel covers
 # every PYTHON_COMPAT target without a per-version fetch.
 PY_TAG="cp39"
@@ -21,13 +28,6 @@ WHEEL_FILENAME="$(pypi_wheel_name "${PN}" "${PV}" "${PY_TAG}" "${ABI_TAG}")"
 
 SRC_URI="$(pypi_wheel_url "${PN}" "${PV}" "${PY_TAG}" "${ABI_TAG}")"
 S="${WORKDIR}"
-
-DESCRIPTION="AI-native open-source embedding database"
-HOMEPAGE="
-	https://www.trychroma.com/
-	https://github.com/chroma-core/chroma
-	https://pypi.org/project/chromadb/
-"
 
 LICENSE="Apache-2.0"
 SLOT="0"
