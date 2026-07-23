@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>gentoo@alexmoch.com</email>
+		<name>Alexander Moch</name>
+	</maintainer>
+	<upstream>
+		<remote-id type="github">Hackplayers/evil-winrm</remote-id>
+		<remote-id type="rubygems">evil-winrm</remote-id>
+	</upstream>
+</pkgmetadata>
