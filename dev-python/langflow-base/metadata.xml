@@ -5,6 +5,13 @@
 		<email>gentoo@alexmoch.com</email>
 		<name>Alexander Moch</name>
 	</maintainer>
+	<use>
+		<flag name="anthropic">Enable the Anthropic Claude component (dev-python/langchain-anthropic)</flag>
+		<flag name="google-genai">Enable the Google Gemini component (dev-python/langchain-google-genai) -- only the Gemini piece of upstream's broader "google" extra; langchain-google-vertexai/-community/-calendar-tools and google-api-python-client aren't packaged</flag>
+		<flag name="ollama">Enable the Ollama component (dev-python/langchain-ollama)</flag>
+		<flag name="openai">Enable the OpenAI component (dev-python/langchain-openai)</flag>
+		<flag name="weaviate">Enable the Weaviate vector store component (dev-python/langchain-weaviate) -- currently uninstallable: dev-python/weaviate-client pins grpcio&lt;1.80.0, and this tree only carries 1.80.0+</flag>
+	</use>
 	<upstream>
 		<remote-id type="github">langflow-ai/langflow</remote-id>
 		<remote-id type="pypi">langflow-base</remote-id>

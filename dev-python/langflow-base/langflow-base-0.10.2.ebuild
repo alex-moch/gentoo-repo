@@ -25,24 +25,43 @@ S="${WORKDIR}"
 LICENSE="MIT"
 SLOT="0"
 KEYWORDS="~amd64"
+IUSE="anthropic google-genai ollama openai weaviate"
 
 # httpx's [http2] extra has no corresponding USE flag on this tree's
 # dev-python/httpx -- translated to a hard dep on dev-python/h2, same as
 # elsewhere in this overlay.
 #
-# langchain-ibm/ibm-watsonx-ai and langchain-weaviate/weaviate-client are
-# both real upstream RDEPEND entries, deliberately omitted here:
-#   - ibm-watsonx-ai needs a 5-package IBM Cloud Object Storage SDK chain
-#     (lomond, ibm-cos-sdk, ibm-cos-sdk-core, ibm-cos-sdk-s3transfer) not
-#     packaged anywhere in this overlay, GURU, or the main tree.
-#   - weaviate-client is packaged (dev-python/weaviate-client) but
-#     genuinely uninstallable: it pins grpcio<1.80.0, and this tree only
-#     carries 1.80.0+.
-# Deviates from "mirror upstream exactly" specifically because including
-# either would make this package itself uninstallable rather than just
-# one leaf dependency -- verify at runtime (real launch test) whether
-# Langflow's component registry lazily imports each integration (safe)
-# or does an eager import at startup (would need revisiting).
+# langchain-ibm/ibm-watsonx-ai is a real upstream RDEPEND entry,
+# deliberately omitted entirely with no USE flag: ibm-watsonx-ai needs a
+# 5-package IBM Cloud Object Storage SDK chain (lomond, ibm-cos-sdk,
+# ibm-cos-sdk-core, ibm-cos-sdk-s3transfer) not packaged anywhere in this
+# overlay, GURU, or the main tree -- a USE flag here would just reference
+# nonexistent atoms, worse than the current silent omission.
+#
+# langchain-weaviate/weaviate-client IS packaged, just genuinely
+# uninstallable by default (weaviate-client pins grpcio<1.80.0, and this
+# tree only carries 1.80.0+) -- gated behind IUSE="weaviate" (default
+# off) instead of silent omission, so the capability is discoverable via
+# `equery uses` and needs zero ebuild rework once the grpcio conflict
+# resolves. Verified at runtime (real launch test) that Langflow's
+# component registry lazily imports each integration rather than doing
+# an eager import at startup, so both this and the ibm omission are
+# runtime-safe, not just build-time-convenient.
+#
+# openai/anthropic/ollama/google-genai are all genuinely optional
+# upstream (langflow-base's own [openai]/[anthropic]/[ollama]/[google]
+# extras), gated the same way -- all four already fully packaged and
+# working from an earlier, unrelated LangChain-provider session.
+# "google-genai" is deliberately NOT named "google" to match upstream's
+# own extra name: that extra also needs langchain-google-vertexai/
+# -community/-calendar-tools and google-api-python-client, none of which
+# are packaged here -- this flag only covers the Gemini integration that
+# IS fully packaged and working. ollama/google-genai's real upstream
+# ceilings (langchain-ollama~=0.3.10, langchain-google-genai~=4.1.2) are
+# both exceeded by what's actually packaged (1.1.0, 4.2.7 -- packaged
+# for that earlier, unrelated session, not specifically to satisfy this
+# extra), so both are gated at just their real floor with no ceiling,
+# same class of deviation as the version-constraint gaps below.
 #
 # Several atoms below are loosened from langflow-base's real upstream pin
 # because the tree has moved past what it was tested against, in either
@@ -210,6 +229,24 @@ RDEPEND="
 	>dev-python/langgraph-checkpoint-4.0.0-r0[${PYTHON_USEDEP}]
 	<dev-python/langgraph-checkpoint-5[${PYTHON_USEDEP}]
 	>=sci-ml/transformers-5.3.0
+	openai? (
+		>=dev-python/langchain-openai-1.1.6[${PYTHON_USEDEP}]
+		>=dev-python/openai-1.68.2[${PYTHON_USEDEP}]
+		<dev-python/openai-3[${PYTHON_USEDEP}]
+	)
+	anthropic? (
+		>=dev-python/langchain-anthropic-1.4.6[${PYTHON_USEDEP}]
+		<dev-python/langchain-anthropic-1.5[${PYTHON_USEDEP}]
+	)
+	ollama? (
+		>=dev-python/langchain-ollama-0.3.10[${PYTHON_USEDEP}]
+	)
+	google-genai? (
+		>=dev-python/langchain-google-genai-4.1.2[${PYTHON_USEDEP}]
+	)
+	weaviate? (
+		>=dev-python/langchain-weaviate-0.0.6[${PYTHON_USEDEP}]
+	)
 "
 
 RESTRICT="test"
