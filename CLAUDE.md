@@ -313,9 +313,16 @@ that can silently stop applying on a bump:
   `libmbedcrypto-3.so`, not plain
   `mbedcrypto` — same failure mode, different subsystem
   (`src/cpp/cli/CMakeLists.txt`'s digest-verification dependency).
-  `files/lemonade-server-*-system-mbedcrypto-slot.patch` changes that
-  one `pkg_check_modules` call to `pkg_search_module(... mbedcrypto
-  mbedcrypto-3)`.
+  `files/lemonade-server-*-system-mbedcrypto-slot.patch` adds a
+  fallback `pkg_check_modules` call using the `-3`-suffixed module
+  names when the unsuffixed one fails. **This patch's exact shape is
+  not stable across bumps** — 10.10.0→11.0.0 only needed a single
+  `mbedcrypto` module (fixed via `pkg_search_module` alternate-name
+  syntax), but 11.0.0→11.5.0 rewrote upstream's probe to require
+  `mbedtls`+`mbedx509`+`mbedcrypto` together (for new CLI HTTPS/TLS
+  support), which needed the whole patch rewritten, not just re-applied
+  with a line offset. Always diff `cli/CMakeLists.txt`'s digest-crypto
+  block against the patch before assuming it still applies.
 
 On every bump: diff the upstream `CMakeLists.txt`/`cli/CMakeLists.txt`
 against the patched lines (context drift breaks the patch silently if
@@ -344,8 +351,13 @@ through the shared build tree).
 `sci-ml/lemonade-desktop`'s `CRATES` list (~590 entries) must be fully
 regenerated from `src-tauri/Cargo.lock` on every bump — don't hand-edit
 it. All 590 are plain crates.io registry entries (no git deps as of
-11.0.0; if a future bump adds one, it needs `GIT_CRATES` instead). To
-regenerate:
+11.0.0; if a future bump adds one, it needs `GIT_CRATES` instead).
+**First diff `src-tauri/Cargo.lock` against the previous version's** —
+it doesn't necessarily change even when `lemonade-server`'s `PV` does
+(11.0.0→11.5.0 shipped a byte-identical `Cargo.lock`, `Cargo.toml`, and
+`tauri.conf.json`, so `CRATES`/`LICENSE`/`RUST_MIN_VER` all carried over
+unchanged and only the version string needed bumping). Don't regenerate
+reflexively — check first. To regenerate when it *has* changed:
 
 ```
 tar xzf <new-tarball> lemonade-<PV>/src/app/src-tauri/Cargo.lock

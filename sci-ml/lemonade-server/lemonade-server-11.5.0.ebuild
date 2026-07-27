@@ -29,7 +29,9 @@ RESTRICT="test webapp? ( network-sandbox )"
 # fallback; these are compiled at both build and run time, hence
 # COMMON_DEPEND. x11-libs/libdrm went from a header-only DEPEND (raw ioctl
 # calls against its UAPI headers) to an actual link as of 11.0.0
-# (server/backends/ryzenai's NPU sensor query).
+# (server/backends/ryzenai's NPU sensor query). As of 11.5.0 the CLI's mbedtls
+# probe needs all three of mbedtls/mbedx509/mbedcrypto (new HTTPS/TLS remote
+# support) — PATCHES also extends the mbedcrypto-slot fix to cover this.
 COMMON_DEPEND="
 	net-libs/libwebsockets
 	net-libs/mbedtls
