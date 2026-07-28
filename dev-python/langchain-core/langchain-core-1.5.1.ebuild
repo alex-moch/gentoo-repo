@@ -20,6 +20,11 @@ KEYWORDS="~amd64"
 
 RESTRICT="test"
 
+# Upstream also excludes tenacity==8.4.0 specifically (a known-bad release)
+# via requires_dist -- Portage atoms can't express a floor/ceiling range
+# with a hole punched in it, and the tree's actual tenacity (9.1.4) isn't
+# 8.4.0 anyway, so the exclusion is moot here and omitted rather than
+# forced through as a real blocker.
 RDEPEND="
 	>=dev-python/jsonpatch-1.33[${PYTHON_USEDEP}]
 	>=dev-python/langchain-protocol-0.0.17[${PYTHON_USEDEP}]

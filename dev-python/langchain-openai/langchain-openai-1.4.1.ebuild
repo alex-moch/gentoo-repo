@@ -21,7 +21,7 @@ KEYWORDS="~amd64"
 RESTRICT="test"
 
 RDEPEND="
-	>=dev-python/langchain-core-1.4.9[${PYTHON_USEDEP}]
+	>=dev-python/langchain-core-1.5.1[${PYTHON_USEDEP}]
 	>=dev-python/openai-2.45.0[${PYTHON_USEDEP}]
 	>=dev-python/tiktoken-0.7.0[${PYTHON_USEDEP}]
 "

@@ -21,8 +21,8 @@ KEYWORDS="~amd64"
 RESTRICT="test"
 
 RDEPEND="
-	>=dev-python/anthropic-0.96.0[${PYTHON_USEDEP}]
-	>=dev-python/langchain-core-1.4.7[${PYTHON_USEDEP}]
+	>=dev-python/anthropic-0.120.0[${PYTHON_USEDEP}]
+	>=dev-python/langchain-core-1.5.1[${PYTHON_USEDEP}]
 	>=dev-python/pydantic-2.7.4[${PYTHON_USEDEP}]
 "
 DEPEND="${RDEPEND}"
