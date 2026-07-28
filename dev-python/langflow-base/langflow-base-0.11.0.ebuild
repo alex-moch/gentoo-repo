@@ -29,29 +29,32 @@ IUSE="anthropic google-genai ollama openai weaviate"
 
 # httpx's [http2] extra has no corresponding USE flag on this tree's
 # dev-python/httpx -- translated to a hard dep on dev-python/h2, same as
-# elsewhere in this overlay.
+# elsewhere in this overlay. sqlalchemy's [aiosqlite] extra needs no
+# separate handling either: dev-python/aiosqlite is already a hard
+# RDEPEND below in its own right.
 #
-# langchain-ibm/ibm-watsonx-ai is a real upstream RDEPEND entry,
-# deliberately omitted entirely with no USE flag: ibm-watsonx-ai needs a
-# 5-package IBM Cloud Object Storage SDK chain (lomond, ibm-cos-sdk,
-# ibm-cos-sdk-core, ibm-cos-sdk-s3transfer) not packaged anywhere in this
-# overlay, GURU, or the main tree -- a USE flag here would just reference
-# nonexistent atoms, worse than the current silent omission.
+# langchain-ibm/ibm-watsonx-ai became a real, unconditional (non-extra)
+# RDEPEND entry in this release -- previously it was omitted entirely
+# because ibm-watsonx-ai's own COS-SDK chain wasn't packaged anywhere.
+# That chain (dev-python/lomond, ibm-cos-sdk, ibm-cos-sdk-core,
+# ibm-cos-sdk-s3transfer) plus dev-python/ibm-watsonx-ai and
+# dev-python/langchain-ibm itself are now packaged in this overlay, so
+# this is included unconditionally like upstream, not gated by a flag.
 #
-# langchain-weaviate/weaviate-client IS packaged, just genuinely
-# uninstallable by default (weaviate-client pins grpcio<1.80.0, and this
-# tree only carries 1.80.0+) -- gated behind IUSE="weaviate" (default
-# off) instead of silent omission, so the capability is discoverable via
-# `equery uses` and needs zero ebuild rework once the grpcio conflict
-# resolves. Verified at runtime (real launch test) that Langflow's
-# component registry lazily imports each integration rather than doing
-# an eager import at startup, so both this and the ibm omission are
-# runtime-safe, not just build-time-convenient.
+# langchain-weaviate/weaviate-client ALSO became unconditional upstream in
+# this release, but is kept behind IUSE="weaviate" (default off) as a
+# deliberate deviation: weaviate-client still pins grpcio<1.80.0, and this
+# tree only carries 1.80.0+, so following upstream here would make the
+# whole package uninstallable by default. Verified at runtime (real launch
+# test) that Langflow's component registry lazily imports each
+# integration rather than doing an eager import at startup, so omitting
+# this by default is runtime-safe, not just build-time-convenient.
 #
 # openai/anthropic/ollama/google-genai are all genuinely optional
 # upstream (langflow-base's own [openai]/[anthropic]/[ollama]/[google]
-# extras), gated the same way -- all four already fully packaged and
-# working from an earlier, unrelated LangChain-provider session.
+# extras -- none of the four appear in upstream's base requires_dist at
+# all), gated the same way as before -- all four already fully packaged
+# and working from an earlier, unrelated LangChain-provider session.
 # "google-genai" is deliberately NOT named "google" to match upstream's
 # own extra name: that extra also needs langchain-google-vertexai/
 # -community/-calendar-tools and google-api-python-client, none of which
@@ -61,7 +64,12 @@ IUSE="anthropic google-genai ollama openai weaviate"
 # both exceeded by what's actually packaged (1.1.0, 4.2.7 -- packaged
 # for that earlier, unrelated session, not specifically to satisfy this
 # extra), so both are gated at just their real floor with no ceiling,
-# same class of deviation as the version-constraint gaps below.
+# same class of deviation as the version-constraint gaps below. These
+# four flags' floors/ceilings were not re-derived against 0.11.0's real
+# component source (they don't appear in upstream's pyproject.toml at
+# all, extra or otherwise -- their provenance was always the running
+# component registry, not the dependency metadata) -- carried forward
+# unchanged rather than re-verified.
 #
 # Several atoms below are loosened from langflow-base's real upstream pin
 # because the tree has moved past what it was tested against, in either
@@ -69,16 +77,23 @@ IUSE="anthropic google-genai ollama openai weaviate"
 # same kind of documented, unverified-but-reasonable deviation as the
 # wcmatch floor relaxation in CLAUDE.md's semgrep bump procedure:
 #   - structlog:     real pin <26.0.0, tree only has 26.1.0+
-#   - rich:          real pin <14.0.0, tree only has 14.3.4+
-#   - bcrypt:        real pin ==4.0.1 exact, tree has 4.3.0/5.0.0
+#   - rich:          real pin <14.0.0, tree only has 15.0.0+
+#   - bcrypt:        real pin ==4.0.1 exact, tree has 5.0.0
 #   - aiofiles:      real pin <25.0.0, tree only has 25.1.0+
-#   - setuptools:    real pin [80.0.0,81.0.0), tree has 79.0.1/82.0.1/83.0.0
 #   - chardet:       real pin >=7.3.0, tree only has 6.0.0_p1 (older, not newer)
 #   - transformers:  real pin >=5.6.0, tree only has up to 5.3.0 (older, not newer)
+#   - mcp:           real pin >=1.28.0, but dev-python/semgrep's latest
+#                    release (1.171.0) still exact-pins mcp==1.23.3 -- the
+#                    same conflict already documented for CVE-2026-52869.
+#                    Kept at the older floor rather than breaking semgrep;
+#                    revisit once semgrep moves its pin.
+# setuptools' real pin (>=83.0.0,<84.0.0) happened to land exactly on
+# what's packaged this time, so it's expressed as a real range now instead
+# of a loosened floor.
 RDEPEND="
-	>=dev-python/lfx-1.10.2[${PYTHON_USEDEP}]
-	<dev-python/lfx-1.11[${PYTHON_USEDEP}]
-	>=dev-python/fastapi-0.135.0[${PYTHON_USEDEP}]
+	>=dev-python/lfx-1.11.0[${PYTHON_USEDEP}]
+	<dev-python/lfx-1.12[${PYTHON_USEDEP}]
+	>=dev-python/fastapi-0.139.0[${PYTHON_USEDEP}]
 	<dev-python/fastapi-1[${PYTHON_USEDEP}]
 	>=dev-python/slowapi-0.1.9[${PYTHON_USEDEP}]
 	<dev-python/slowapi-1[${PYTHON_USEDEP}]
@@ -95,6 +110,8 @@ RDEPEND="
 	<dev-python/langchain-1.4[${PYTHON_USEDEP}]
 	>=dev-python/langchain-community-0.4.1[${PYTHON_USEDEP}]
 	<dev-python/langchain-community-0.5[${PYTHON_USEDEP}]
+	>=dev-python/langchain-ibm-1.1.0[${PYTHON_USEDEP}]
+	<dev-python/langchain-ibm-1.2[${PYTHON_USEDEP}]
 	>=dev-python/langchain-mongodb-0.11.0[${PYTHON_USEDEP}]
 	>=dev-python/langchain-perplexity-1.0.0[${PYTHON_USEDEP}]
 	<dev-python/langchain-perplexity-2[${PYTHON_USEDEP}]
@@ -113,7 +130,7 @@ RDEPEND="
 	>=dev-python/sqlmodel-0.0.37[${PYTHON_USEDEP}]
 	<dev-python/sqlmodel-0.1[${PYTHON_USEDEP}]
 	>=dev-python/pydantic-2.13.0[${PYTHON_USEDEP}]
-	<dev-python/pydantic-3[${PYTHON_USEDEP}]
+	<dev-python/pydantic-2.14[${PYTHON_USEDEP}]
 	>=dev-python/pydantic-settings-2.2.0[${PYTHON_USEDEP}]
 	<dev-python/pydantic-settings-3[${PYTHON_USEDEP}]
 	>=dev-python/email-validator-2.0.0[${PYTHON_USEDEP}]
@@ -166,17 +183,22 @@ RDEPEND="
 	>=dev-python/opentelemetry-sdk-1.30.0[${PYTHON_USEDEP}]
 	<dev-python/opentelemetry-sdk-2[${PYTHON_USEDEP}]
 	>=dev-python/opentelemetry-exporter-prometheus-0.64_beta0[${PYTHON_USEDEP}]
+	<dev-python/opentelemetry-exporter-prometheus-1[${PYTHON_USEDEP}]
 	>=dev-python/opentelemetry-exporter-otlp-1.30.0[${PYTHON_USEDEP}]
 	<dev-python/opentelemetry-exporter-otlp-2[${PYTHON_USEDEP}]
 	>=dev-python/opentelemetry-instrumentation-fastapi-0.64_beta0[${PYTHON_USEDEP}]
+	<dev-python/opentelemetry-instrumentation-fastapi-1[${PYTHON_USEDEP}]
 	>=dev-python/opentelemetry-instrumentation-requests-0.64_beta0[${PYTHON_USEDEP}]
+	<dev-python/opentelemetry-instrumentation-requests-1[${PYTHON_USEDEP}]
 	>=dev-python/opentelemetry-instrumentation-urllib3-0.64_beta0[${PYTHON_USEDEP}]
+	<dev-python/opentelemetry-instrumentation-urllib3-1[${PYTHON_USEDEP}]
 	>=dev-python/prometheus-client-0.20.0[${PYTHON_USEDEP}]
 	<dev-python/prometheus-client-1[${PYTHON_USEDEP}]
 	dev-python/aiofiles[${PYTHON_USEDEP}]
 	>=dev-python/pip-26.0.0[${PYTHON_USEDEP}]
 	<dev-python/pip-27[${PYTHON_USEDEP}]
-	>=dev-python/setuptools-80.0.0[${PYTHON_USEDEP}]
+	>=dev-python/setuptools-83.0.0[${PYTHON_USEDEP}]
+	<dev-python/setuptools-84[${PYTHON_USEDEP}]
 	>=dev-python/nanoid-2.0.0[${PYTHON_USEDEP}]
 	<dev-python/nanoid-3[${PYTHON_USEDEP}]
 	>=dev-python/filelock-3.20.1[${PYTHON_USEDEP}]
@@ -229,6 +251,10 @@ RDEPEND="
 	>dev-python/langgraph-checkpoint-4.0.0-r0[${PYTHON_USEDEP}]
 	<dev-python/langgraph-checkpoint-5[${PYTHON_USEDEP}]
 	>=sci-ml/transformers-5.3.0
+	>=dev-python/a2a-sdk-1.1.0[${PYTHON_USEDEP}]
+	<dev-python/a2a-sdk-2[${PYTHON_USEDEP}]
+	>=dev-python/ibm-watsonx-ai-1.3.1[${PYTHON_USEDEP}]
+	<dev-python/ibm-watsonx-ai-2[${PYTHON_USEDEP}]
 	openai? (
 		>=dev-python/langchain-openai-1.1.6[${PYTHON_USEDEP}]
 		>=dev-python/openai-1.68.2[${PYTHON_USEDEP}]
@@ -236,7 +262,7 @@ RDEPEND="
 	)
 	anthropic? (
 		>=dev-python/langchain-anthropic-1.4.6[${PYTHON_USEDEP}]
-		<dev-python/langchain-anthropic-1.5[${PYTHON_USEDEP}]
+		<dev-python/langchain-anthropic-1.6[${PYTHON_USEDEP}]
 	)
 	ollama? (
 		>=dev-python/langchain-ollama-0.3.10[${PYTHON_USEDEP}]
