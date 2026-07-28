@@ -1,13 +1,6 @@
-From: Pavel Sobolev <contact@paveloom.dev>
-Subject: [PATCH] Use system libraries
-
-Everything, except for Eigen3.
-
-Signed-off-by: Pavel Sobolev <contact@paveloom.dev>
-
 --- a/cmake/external/abseil-cpp.cmake
 +++ b/cmake/external/abseil-cpp.cmake
-@@ -37,7 +37,7 @@ onnxruntime_fetchcontent_declare(
+@@ -39,7 +39,7 @@
      URL_HASH SHA1=${DEP_SHA1_abseil_cpp}
      EXCLUDE_FROM_ALL
      PATCH_COMMAND ${ABSL_PATCH_COMMAND}
@@ -18,7 +11,7 @@ Signed-off-by: Pavel Sobolev <contact@paveloom.dev>
  onnxruntime_fetchcontent_makeavailable(abseil_cpp)
 --- a/cmake/external/onnxruntime_external_deps.cmake
 +++ b/cmake/external/onnxruntime_external_deps.cmake
-@@ -43,7 +43,7 @@ onnxruntime_fetchcontent_declare(
+@@ -43,7 +43,7 @@
      URL ${DEP_URL_re2}
      URL_HASH SHA1=${DEP_SHA1_re2}
      EXCLUDE_FROM_ALL
@@ -27,7 +20,7 @@ Signed-off-by: Pavel Sobolev <contact@paveloom.dev>
  )
  onnxruntime_fetchcontent_makeavailable(re2)
  
-@@ -71,7 +71,7 @@ if (onnxruntime_BUILD_UNIT_TESTS)
+@@ -71,7 +71,7 @@
      URL ${DEP_URL_googletest}
      URL_HASH SHA1=${DEP_SHA1_googletest}
      EXCLUDE_FROM_ALL
@@ -36,7 +29,7 @@ Signed-off-by: Pavel Sobolev <contact@paveloom.dev>
    )
    FetchContent_MakeAvailable(googletest)
  endif()
-@@ -87,7 +87,7 @@ if (onnxruntime_BUILD_BENCHMARKS)
+@@ -87,7 +87,7 @@
      URL ${DEP_URL_google_benchmark}
      URL_HASH SHA1=${DEP_SHA1_google_benchmark}
      EXCLUDE_FROM_ALL
@@ -45,7 +38,7 @@ Signed-off-by: Pavel Sobolev <contact@paveloom.dev>
    )
    onnxruntime_fetchcontent_makeavailable(google_benchmark)
  endif()
-@@ -105,7 +105,7 @@ if(onnxruntime_USE_MIMALLOC)
+@@ -105,7 +105,7 @@
      URL ${DEP_URL_mimalloc}
      URL_HASH SHA1=${DEP_SHA1_mimalloc}
      EXCLUDE_FROM_ALL
@@ -54,7 +47,7 @@ Signed-off-by: Pavel Sobolev <contact@paveloom.dev>
    )
    FetchContent_MakeAvailable(mimalloc)
  endif()
-@@ -199,7 +199,7 @@ onnxruntime_fetchcontent_declare(
+@@ -199,7 +199,7 @@
    URL_HASH SHA1=${DEP_SHA1_protobuf}
    PATCH_COMMAND ${ONNXRUNTIME_PROTOBUF_PATCH_COMMAND}
    EXCLUDE_FROM_ALL
@@ -63,7 +56,7 @@ Signed-off-by: Pavel Sobolev <contact@paveloom.dev>
  )
  
  set(protobuf_BUILD_TESTS OFF CACHE BOOL "Build protobuf tests" FORCE)
-@@ -276,7 +276,7 @@ onnxruntime_fetchcontent_declare(
+@@ -276,7 +276,7 @@
    EXCLUDE_FROM_ALL
    PATCH_COMMAND
      ${Patch_EXECUTABLE} --binary --ignore-whitespace -p1 < ${PROJECT_SOURCE_DIR}/patches/date/date.patch
@@ -72,7 +65,7 @@ Signed-off-by: Pavel Sobolev <contact@paveloom.dev>
  )
  onnxruntime_fetchcontent_makeavailable(date)
  
-@@ -290,12 +290,11 @@ if(NOT TARGET Boost::mp11)
+@@ -290,12 +290,11 @@
       mp11
       URL ${DEP_URL_mp11}
       EXCLUDE_FROM_ALL
@@ -88,7 +81,7 @@ Signed-off-by: Pavel Sobolev <contact@paveloom.dev>
      endif()
    endif()
  endif()
-@@ -308,7 +307,7 @@ onnxruntime_fetchcontent_declare(
+@@ -308,7 +307,7 @@
      URL ${DEP_URL_json}
      URL_HASH SHA1=${DEP_SHA1_json}
      EXCLUDE_FROM_ALL
@@ -97,16 +90,25 @@ Signed-off-by: Pavel Sobolev <contact@paveloom.dev>
  )
  onnxruntime_fetchcontent_makeavailable(nlohmann_json)
  
-@@ -374,7 +373,7 @@ if (CPUINFO_SUPPORTED)
-         ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/patches/cpuinfo/patch_vcpkg_arm64ec_support.patch &&
-         # https://github.com/pytorch/cpuinfo/pull/348
-         ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/patches/cpuinfo/win_arm_fp16_detection_fallback.patch
+@@ -372,7 +371,7 @@
+         ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/patches/cpuinfo/patch_cpuinfo_h_for_arm64ec.patch &&
+         # https://github.com/pytorch/cpuinfo/pull/324
+         ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/patches/cpuinfo/patch_vcpkg_arm64ec_support.patch
 -      FIND_PACKAGE_ARGS NAMES cpuinfo
 +      FIND_PACKAGE_ARGS NAMES cpuinfo REQUIRED
      )
    elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
      message(STATUS "Applying sysfs fallback patch for cpuinfo on Linux")
-@@ -394,7 +393,7 @@ if (CPUINFO_SUPPORTED)
+@@ -384,7 +383,7 @@
+       PATCH_COMMAND
+         # https://github.com/microsoft/onnxruntime/issues/10038
+         ${Patch_EXECUTABLE} -p1 < ${PROJECT_SOURCE_DIR}/patches/cpuinfo/fix_missing_sysfs_fallback.patch
+-      FIND_PACKAGE_ARGS NAMES cpuinfo
++      FIND_PACKAGE_ARGS NAMES cpuinfo REQUIRED
+     )
+   else()
+     onnxruntime_fetchcontent_declare(
+@@ -392,7 +391,7 @@
        URL ${DEP_URL_pytorch_cpuinfo}
        URL_HASH SHA1=${DEP_SHA1_pytorch_cpuinfo}
        EXCLUDE_FROM_ALL
@@ -115,7 +117,7 @@ Signed-off-by: Pavel Sobolev <contact@paveloom.dev>
      )
    endif()
    set(ONNXRUNTIME_CPUINFO_PROJ pytorch_cpuinfo)
-@@ -413,7 +412,7 @@ onnxruntime_fetchcontent_declare(
+@@ -411,7 +410,7 @@
    # containing microsoft/GSL#1213 (commit 543d0dd).
    PATCH_COMMAND ${Patch_EXECUTABLE} --binary --ignore-whitespace -p1 < ${PROJECT_SOURCE_DIR}/patches/gsl/1213.patch
    EXCLUDE_FROM_ALL
@@ -124,7 +126,7 @@ Signed-off-by: Pavel Sobolev <contact@paveloom.dev>
  )
  set(GSL_TARGET "Microsoft.GSL::GSL")
  set(GSL_INCLUDE_DIR "$<TARGET_PROPERTY:${GSL_TARGET},INTERFACE_INCLUDE_DIRECTORIES>")
-@@ -426,7 +425,7 @@ if (NOT GSL_FOUND AND NOT onnxruntime_BUILD_SHARED_LIB)
+@@ -424,7 +423,7 @@
    RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR})
  endif()
  
@@ -133,7 +135,7 @@ Signed-off-by: Pavel Sobolev <contact@paveloom.dev>
  if(NOT safeint_SOURCE_DIR)
    unset(safeint_SOURCE_DIR)
    onnxruntime_fetchcontent_declare(
-@@ -468,10 +467,14 @@ onnxruntime_fetchcontent_declare(
+@@ -466,10 +465,14 @@
      URL_HASH SHA1=${DEP_SHA1_flatbuffers}
      PATCH_COMMAND ${ONNXRUNTIME_FLATBUFFERS_PATCH_COMMAND}
      EXCLUDE_FROM_ALL
@@ -149,7 +151,7 @@ Signed-off-by: Pavel Sobolev <contact@paveloom.dev>
  if(NOT flatbuffers_FOUND)
    if(NOT TARGET flatbuffers::flatbuffers)
      add_library(flatbuffers::flatbuffers ALIAS flatbuffers)
-@@ -533,7 +536,7 @@ onnxruntime_fetchcontent_declare(
+@@ -531,7 +534,7 @@
    URL_HASH SHA1=${DEP_SHA1_onnx}
    PATCH_COMMAND ${ONNXRUNTIME_ONNX_PATCH_COMMAND}
    EXCLUDE_FROM_ALL
@@ -158,7 +160,7 @@ Signed-off-by: Pavel Sobolev <contact@paveloom.dev>
  )
  
  onnxruntime_fetchcontent_makeavailable(onnx)
-@@ -608,7 +611,7 @@ if(onnxruntime_ENABLE_DLPACK)
+@@ -606,7 +609,7 @@
      URL ${DEP_URL_dlpack}
      URL_HASH SHA1=${DEP_SHA1_dlpack}
      EXCLUDE_FROM_ALL
@@ -167,7 +169,7 @@ Signed-off-by: Pavel Sobolev <contact@paveloom.dev>
    )
    onnxruntime_fetchcontent_makeavailable(dlpack)
  endif()
-@@ -628,7 +631,7 @@ if(onnxruntime_ENABLE_TRAINING OR (onnxruntime_ENABLE_TRAINING_APIS AND onnxrunt
+@@ -626,7 +629,7 @@
      URL_HASH SHA1=${DEP_SHA1_cxxopts}
      PATCH_COMMAND ${ONNXRUNTIME_CXXOPTS_PATCH_COMMAND}
      EXCLUDE_FROM_ALL
@@ -178,7 +180,7 @@ Signed-off-by: Pavel Sobolev <contact@paveloom.dev>
    set(CXXOPTS_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 --- a/cmake/external/pybind11.cmake
 +++ b/cmake/external/pybind11.cmake
-@@ -6,6 +6,6 @@ onnxruntime_fetchcontent_declare(
+@@ -6,6 +6,6 @@
      URL ${DEP_URL_pybind11}
      URL_HASH SHA1=${DEP_SHA1_pybind11}
      EXCLUDE_FROM_ALL
@@ -188,7 +190,7 @@ Signed-off-by: Pavel Sobolev <contact@paveloom.dev>
  onnxruntime_fetchcontent_makeavailable(pybind11_project)
 --- a/cmake/external/wil.cmake
 +++ b/cmake/external/wil.cmake
-@@ -8,7 +8,7 @@ onnxruntime_fetchcontent_declare(
+@@ -8,7 +8,7 @@
    URL ${DEP_URL_microsoft_wil}
    URL_HASH SHA1=${DEP_SHA1_microsoft_wil}
    EXCLUDE_FROM_ALL
@@ -199,7 +201,7 @@ Signed-off-by: Pavel Sobolev <contact@paveloom.dev>
  if(WIN32)
 --- a/cmake/external/xnnpack.cmake
 +++ b/cmake/external/xnnpack.cmake
-@@ -17,11 +17,11 @@ if(CMAKE_ANDROID_ARCH_ABI STREQUAL armeabi-v7a)
+@@ -17,11 +17,11 @@
  endif()
  
  # pthreadpool depends on fxdiv
@@ -213,7 +215,7 @@ Signed-off-by: Pavel Sobolev <contact@paveloom.dev>
  onnxruntime_fetchcontent_makeavailable(pthreadpool)
  
  # ---  Determine target processor
-@@ -86,7 +86,7 @@ endif()
+@@ -86,7 +86,7 @@
  onnxruntime_fetchcontent_declare(googlexnnpack URL ${DEP_URL_googlexnnpack} URL_HASH SHA1=${DEP_SHA1_googlexnnpack}
                       PATCH_COMMAND ${Patch_EXECUTABLE} --binary --ignore-whitespace -p1 < ${PROJECT_SOURCE_DIR}/patches/xnnpack/AddEmscriptenAndIosSupport.patch
  		     EXCLUDE_FROM_ALL
@@ -222,4 +224,3 @@ Signed-off-by: Pavel Sobolev <contact@paveloom.dev>
                      )
  onnxruntime_fetchcontent_makeavailable(googlexnnpack)
  set(XNNPACK_DIR ${googlexnnpack_SOURCE_DIR})
-
