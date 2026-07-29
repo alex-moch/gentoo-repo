@@ -82,11 +82,9 @@ IUSE="anthropic google-genai ollama openai weaviate"
 #   - aiofiles:      real pin <25.0.0, tree only has 25.1.0+
 #   - chardet:       real pin >=7.3.0, tree only has 6.0.0_p1 (older, not newer)
 #   - transformers:  real pin >=5.6.0, tree only has up to 5.3.0 (older, not newer)
-#   - mcp:           real pin >=1.28.0, but dev-python/semgrep's latest
-#                    release (1.171.0) still exact-pins mcp==1.23.3 -- the
-#                    same conflict already documented for CVE-2026-52869.
-#                    Kept at the older floor rather than breaking semgrep;
-#                    revisit once semgrep moves its pin.
+# mcp's real floor (>=1.28.0) no longer needs a deviation -- dev-python/mcp
+# is now 1.29.0 (bumped for CVE-2026-52869, see dev-python/semgrep's ebuild
+# for the compatibility analysis behind loosening semgrep's exact pin).
 # setuptools' real pin (>=83.0.0,<84.0.0) happened to land exactly on
 # what's packaged this time, so it's expressed as a real range now instead
 # of a loosened floor.
@@ -222,7 +220,7 @@ RDEPEND="
 	<dev-python/networkx-4[${PYTHON_USEDEP}]
 	>=dev-python/json-repair-0.30.3[${PYTHON_USEDEP}]
 	<dev-python/json-repair-1[${PYTHON_USEDEP}]
-	>=dev-python/mcp-1.17.0[${PYTHON_USEDEP}]
+	>=dev-python/mcp-1.28.0[${PYTHON_USEDEP}]
 	<dev-python/mcp-2[${PYTHON_USEDEP}]
 	>=dev-python/aiosqlite-0.20.0[${PYTHON_USEDEP}]
 	<dev-python/aiosqlite-1[${PYTHON_USEDEP}]

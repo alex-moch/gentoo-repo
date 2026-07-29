@@ -18,6 +18,18 @@ LICENSE="LGPL-2.1+"
 SLOT="0"
 KEYWORDS="~amd64"
 
+# Real upstream pin is the exact mcp==1.23.3 -- loosened here as a deliberate,
+# security-motivated deviation, not something upstream has blessed. 1.23.3 is
+# vulnerable to CVE-2026-52869 (GHSA-jpw9-pfvf-9f58, session-hijacking-class
+# auth bypass); the fix (upstream commits 1abcca24/ce267b6f) was explicitly
+# backported to the 1.x line rather than only landing in the 2.0.0 rewrite, so
+# >=1.27.2,<2 gets the fix without the breaking changes 2.0.0 likely carries.
+# Checked semgrep's own mcp usage (semgrep/mcp/*.py, semgrep/commands/mcp.py):
+# it imports mcp.server.auth.provider.{AccessToken,TokenVerifier} and
+# mcp.server.fastmcp directly, which the fix does touch, but both fix commits
+# look additive/internal (a new AccessToken field; session-binding hardening
+# semgrep doesn't reach into) rather than API-breaking. Verified with a real
+# `semgrep mcp` server start and a real scan, not just import/--version.
 RDEPEND="
 	>=dev-python/attrs-21.3[${PYTHON_USEDEP}]
 	>=dev-python/boltons-21.0[${PYTHON_USEDEP}]
@@ -27,7 +39,8 @@ RDEPEND="
 	>=dev-python/exceptiongroup-1.2.0[${PYTHON_USEDEP}]
 	>=dev-python/glom-23.3[${PYTHON_USEDEP}]
 	>=dev-python/jsonschema-4.25.1[${PYTHON_USEDEP}]
-	~dev-python/mcp-1.23.3[${PYTHON_USEDEP}]
+	>=dev-python/mcp-1.27.2[${PYTHON_USEDEP}]
+	<dev-python/mcp-2[${PYTHON_USEDEP}]
 	>=dev-python/opentelemetry-api-1.37.0[${PYTHON_USEDEP}]
 	>=dev-python/opentelemetry-sdk-1.37.0[${PYTHON_USEDEP}]
 	>=dev-python/opentelemetry-exporter-otlp-proto-http-1.37.0[${PYTHON_USEDEP}]
