@@ -20,6 +20,9 @@ KEYWORDS="~amd64"
 
 RESTRICT="test"
 
+# Pinned to 2.14.3, not PyPI's latest -- see dev-python/ibm-cos-sdk for why
+# (ibm-watsonx-ai's real ceiling, not anything internal to this trio).
+#
 # Real upstream pin is jmespath<=1.0.1,>=0.10.0 (unchanged as of the current
 # 2.16.2 release too -- not something this bump happened to catch mid-move).
 # This tree only carries jmespath-1.1.0, above the real ceiling, and no

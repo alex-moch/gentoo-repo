@@ -18,6 +18,9 @@ LICENSE="MIT"
 SLOT="0"
 KEYWORDS="~amd64"
 
+# langflow-base pins langchain-chroma~=0.2.6 (i.e. >=0.2.6,<0.3) -- PyPI's
+# latest is 1.1.0, well past the real ceiling. Don't bump past 0.2.x.
+#
 # Real dependencies is just these three; the numpy floor is version-gated
 # (>=1.26.0 on python<3.13, >=2.1.0 on python>=3.13) -- collapsed to the
 # stricter unconditional 2.1.0 floor since Portage can't express a

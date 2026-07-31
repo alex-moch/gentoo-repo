@@ -18,6 +18,13 @@ LICENSE="Apache-2.0"
 SLOT="0"
 KEYWORDS="~amd64"
 
+# Not langflow-base's own pin -- dev-python/markitdown (an lfx dependency)
+# pins magika~=0.6.1, and that's still true at markitdown's own latest
+# release (0.1.6). PyPI's latest magika is 1.0.3, a major bump that also
+# dropped the numpy/python-dotenv deps below entirely -- bumping this
+# package would break markitdown, not just need a RDEPEND update. Don't
+# bump past 0.6.x without markitdown moving first.
+#
 # Upstream ships a small (~3MB) pre-trained ONNX model as package data
 # (src/magika/models/standard_v3_3/model.onnx) directly in the sdist --
 # there is no build-time or run-time model download.

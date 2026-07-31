@@ -20,6 +20,8 @@ KEYWORDS="~amd64"
 
 RESTRICT="test"
 
+# Pinned to 2.14.3, not PyPI's latest -- see dev-python/ibm-cos-sdk for why
+# (ibm-watsonx-ai's real ceiling, not anything internal to this trio).
 RDEPEND="
 	~dev-python/ibm-cos-sdk-core-2.14.3[${PYTHON_USEDEP}]
 "

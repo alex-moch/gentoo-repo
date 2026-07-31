@@ -20,7 +20,12 @@ KEYWORDS="~amd64"
 
 RESTRICT="test"
 
-# See dev-python/ibm-cos-sdk-core for the jmespath ceiling deviation.
+# Pinned to 2.14.3, not PyPI's latest (2.16.2): dev-python/ibm-watsonx-ai
+# real-pins ibm-cos-sdk<2.15.0,>=2.12.0, and this whole trio (ibm-cos-sdk,
+# -core, -s3transfer) must move in lockstep at the same PV regardless (each
+# other's own real pins are exact ==). Don't bump without checking
+# ibm-watsonx-ai's ceiling first. See dev-python/ibm-cos-sdk-core for the
+# separate jmespath ceiling deviation.
 RDEPEND="
 	~dev-python/ibm-cos-sdk-core-2.14.3[${PYTHON_USEDEP}]
 	~dev-python/ibm-cos-sdk-s3transfer-2.14.3[${PYTHON_USEDEP}]

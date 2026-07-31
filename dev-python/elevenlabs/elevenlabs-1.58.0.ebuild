@@ -20,6 +20,10 @@ KEYWORDS="~amd64"
 
 RESTRICT="test"
 
+# langflow-base pins elevenlabs<2.0.0,>=1.52.0 (for python_version != "3.12";
+# this tree's python3.14 target falls under that branch) -- PyPI's latest
+# is 2.59.0, well past the real ceiling. Don't bump past 1.x.
+#
 # Upstream also lists pydantic-core>=2.18.2, but Gentoo does not carry
 # it as a standalone package: dev-python/pydantic vendors a matching
 # pydantic-core build and blocks a separate dev-python/pydantic-core

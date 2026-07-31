@@ -1,0 +1,52 @@
+{
+  "_comment": "Explicit exceptions only. Everything else is auto-detected from each package's highest-version ebuild (inherit line / SRC_URI). Add an entry here only when auto-detection can't work or picks the wrong source. 'skip' takes a reason string; 'strategy' overrides auto-detection (pypi/github-release/github-commit/rubygems/apt-packages) with explicit parameters.",
+
+  "acct-group/lemonade": {"skip": "no upstream -- local system account"},
+  "acct-group/ollama": {"skip": "no upstream -- local system account"},
+  "acct-group/vmware": {"skip": "no upstream -- local system account"},
+  "acct-user/lemonade": {"skip": "no upstream -- local system account"},
+  "acct-user/ollama": {"skip": "no upstream -- local system account"},
+
+  "dev-util/Tensile": {"skip": "temporary local hold -- do not update, see CLAUDE.md"},
+  "dev-util/semgrep-core-bin": {"skip": "follows dev-python/semgrep -- bump together, same PV"},
+
+  "app-emulation/vmware-workstation": {"skip": "manual -- Broadcom CDS discovery chain, see CLAUDE.md"},
+  "app-emulation/vmware-modules": {"strategy": "github-commit", "repo": "alex-moch/vmware-modules"},
+
+  "net-firewall/littlesnitch": {"skip": "manual -- no machine-readable feed, see CLAUDE.md"},
+
+  "app-misc/claude-desktop": {"strategy": "apt-packages", "url": "https://downloads.claude.ai/claude-desktop/apt/stable/dists/stable/main/binary-amd64/Packages"},
+
+  "dev-python/sentry-sdk": {"strategy": "pypi", "name": "sentry_sdk"},
+  "dev-python/oscrypto": {"strategy": "github-commit", "repo": "wbond/oscrypto"},
+  "dev-python/pynfsclient": {"strategy": "github-commit", "repo": "Pennyw0rth/NfsClient"},
+
+  "sci-ml/lemonade-desktop": {"skip": "follows sci-ml/lemonade-server -- check that package instead"},
+  "sci-ml/ollama": {"strategy": "github-release", "repo": "ollama/ollama"},
+
+  "dev-debug/pwndbg": {"strategy": "github-release", "repo": "pwndbg/pwndbg", "strip_dots": true},
+
+  "sys-fs/zfs": {"strategy": "github-release", "repo": "openzfs/zfs", "strip_prefix": "zfs"},
+  "sys-fs/zfs-kmod": {"strategy": "github-release", "repo": "openzfs/zfs", "strip_prefix": "zfs"},
+  "sys-fs/zettarepl": {"skip": "no independent release scheme -- only TrueNAS SCALE tags (e.g. TS-25.10.4), no PyPI, see package comment"},
+
+  "dev-python/opentelemetry-exporter-prometheus": {"skip": "tracks a hardcoded historical MY_TAG pin against the main repo, not its own PV -- see CLAUDE.md's OpenTelemetry paired-tag resolution"},
+  "dev-python/opentelemetry-instrumentation": {"skip": "contrib-repo /releases/latest returns whichever sub-package released most recently, not the paired combined release -- see CLAUDE.md's OpenTelemetry paired-tag resolution"},
+  "dev-python/opentelemetry-instrumentation-asgi": {"skip": "contrib-repo /releases/latest returns whichever sub-package released most recently, not the paired combined release -- see CLAUDE.md's OpenTelemetry paired-tag resolution"},
+  "dev-python/opentelemetry-instrumentation-fastapi": {"skip": "contrib-repo /releases/latest returns whichever sub-package released most recently, not the paired combined release -- see CLAUDE.md's OpenTelemetry paired-tag resolution"},
+  "dev-python/opentelemetry-instrumentation-requests": {"skip": "contrib-repo /releases/latest returns whichever sub-package released most recently, not the paired combined release -- see CLAUDE.md's OpenTelemetry paired-tag resolution"},
+  "dev-python/opentelemetry-instrumentation-threading": {"skip": "contrib-repo /releases/latest returns whichever sub-package released most recently, not the paired combined release -- see CLAUDE.md's OpenTelemetry paired-tag resolution"},
+  "dev-python/opentelemetry-instrumentation-urllib3": {"skip": "contrib-repo /releases/latest returns whichever sub-package released most recently, not the paired combined release -- see CLAUDE.md's OpenTelemetry paired-tag resolution"},
+  "dev-python/opentelemetry-util-http": {"skip": "contrib-repo /releases/latest returns whichever sub-package released most recently, not the paired combined release -- see CLAUDE.md's OpenTelemetry paired-tag resolution"},
+
+  "dev-python/clickhouse-connect": {"skip": "langflow-base pins clickhouse-connect==0.7.19 exactly -- see package comment"},
+  "dev-python/elevenlabs": {"skip": "langflow-base pins elevenlabs<2.0.0,>=1.52.0 -- see package comment"},
+  "dev-python/firecrawl-py": {"skip": "langflow-base pins firecrawl-py<2.0.0,>=1.0.16 -- see package comment"},
+  "dev-python/jsonquerylang": {"skip": "langflow-base pins jsonquerylang<2.0.0,>=1.1.1 -- see package comment"},
+  "dev-python/langchain-chroma": {"skip": "langflow-base pins langchain-chroma~=0.2.6 (<0.3) -- see package comment"},
+  "dev-python/magika": {"skip": "markitdown (an lfx dependency) pins magika~=0.6.1; PyPI's 1.0.3 would break it -- see package comment"},
+  "dev-python/ibm-cos-sdk": {"skip": "ibm-watsonx-ai real-pins ibm-cos-sdk<2.15.0,>=2.12.0 -- see package comment"},
+  "dev-python/ibm-cos-sdk-core": {"skip": "pinned in lockstep with dev-python/ibm-cos-sdk -- see package comment"},
+  "dev-python/ibm-cos-sdk-s3transfer": {"skip": "pinned in lockstep with dev-python/ibm-cos-sdk -- see package comment"},
+  "dev-python/spider-client": {"skip": "upstream wheel-only (no sdist) since 0.1.90 -- needs the wheel-install pattern, not a version bump, see package comment"}
+}
