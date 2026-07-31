@@ -88,6 +88,7 @@ when looking up upstream changes or comparing against the source ebuilds.
 | `app-emulation/vmware-workstation` | hybrid: nest + pg_overlay + pf4public | Heavy local rework |
 | `app-misc/claude-desktop` | local | Written from scratch — no upstream ebuild reference. Repackages Anthropic's official `.deb` (a prebuilt Electron bundle) into `/opt`. `RDEPEND` derived from the shipped binaries' ELF `NEEDED` set; the Debian maintainer scripts (AppArmor userns profile, apt-repo registration) are intentionally dropped as Debian-specific. Docs at https://code.claude.com/docs/en/desktop-linux |
 | `dev-debug/pwndbg` | Gentoo (official) | Version-pinned fork, now **ahead** of the official tree and carrying local patches (capstone de-vendor via `src_prepare`, `niche-elf` dep, `pycparser` floor). No longer byte-identical to upstream — do not assume a clean diff/rebase |
+| `dev-libs/capstone` | local | Forked from Gentoo's own `capstone-6.0.0_alpha7.ebuild` (used as boilerplate, per the "check the main Gentoo tree first" convention) because `dev-debug/pwndbg`'s capstone floor ran ahead of what Gentoo packages — the 2026.07.29 pwndbg bump needed `CS_MODE_RISCV_ZBA`/`ZBB`/`ZBS` and `CS_OPT_SYNTAX_NO_ALIAS_TEXT_COMPRESSED`, symbols only present from capstone `6.0.0-Alpha8` onward, and Gentoo's tree topped out at `alpha7` (confirmed against the live upstream tree, not a stale local mirror). Pinned to `alpha9` to match `capstone6pwndbg`'s own upstream pin. Carries the same `capstone-werror.patch` Gentoo's own ebuild uses (applies via fuzzy match on both `alpha7` and `alpha9` — `CMakeLists.txt`'s relevant region is byte-identical between the two, so the fuzz isn't a new risk introduced by this fork). Drop this fork once Gentoo ships `alpha8`+ and re-point `dev-debug/pwndbg`'s RDEPEND back at the official package |
 | `dev-python/niche-elf` | local | Created here from pwndbg's PyPI dependency (upstream `github.com/pwndbg/niche-elf`); pure-Python |
 | `dev-python/chromadb` | local | Written from scratch — upstream never publishes an sdist for this package. Installed via the real prebuilt manylinux wheel instead of vendoring its ~1020-crate Rust/PyO3 workspace (`DISTUTILS_USE_PEP517=no`, custom `python_compile()` calling `distutils_wheel_install()`), patterned after `dev-util/semgrep-core-bin`. The compiled `.so` only links `libc`/`libm`/`libpthread`/`libdl`/`ld-linux` (verified via `scanelf -qn`) — no hidden native RDEPEND risk from skipping the source build |
 | `dev-python/face` | Pentoo | Forked, maintainer reassigned. Pulled in as a `dev-python/glom` sub-dependency |
@@ -149,6 +150,7 @@ where the naive "latest on PyPI" answer was wrong).
 | `app-forensics/sleuthkit` | `https://api.github.com/repos/sleuthkit/sleuthkit/releases/latest` | Tag format `sleuthkit-X.Y.Z`; ebuild version is the `X.Y.Z` part. On bump, re-check `tsk/Makefile.am`'s `-version-info` first field for the `SLOT` subslot |
 | `app-misc/claude-desktop` | `https://downloads.claude.ai/claude-desktop/apt/stable/dists/stable/main/binary-amd64/Packages` | No releases feed — parse the apt `Packages` index. Latest: `curl -fsSL <url> \| awk '/^Version:/{print $2}' \| sort -V \| tail -1`. Distfile is `claude-desktop_${PV}_${arch}.deb` under `.../pool/main/c/claude-desktop/`; the `.deb`'s own `SHA256` is in the same `Packages` block. Since it's a binary repackage, on bump re-scan the bundle's ELF `NEEDED` sonames (`scanelf -qn`) for new library deps before trusting the old `RDEPEND` |
 | `dev-debug/pwndbg` | `https://api.github.com/repos/pwndbg/pwndbg/releases/latest` | Tag format `YYYY.MM.DD`; ebuild version drops the dots. See bump procedure below |
+| `dev-libs/capstone` | `https://api.github.com/repos/capstone-engine/capstone/tags` | Only needs bumping when `dev-debug/pwndbg`'s `capstone6pwndbg` pin moves past what this fork provides, or once Gentoo's own tree catches up (check `https://api.github.com/repos/gentoo-mirror/gentoo/contents/dev-libs/capstone` — if it now has an ebuild at or past this fork's version, drop the fork and revert pwndbg's RDEPEND to the official package) |
 | `dev-python/niche-elf` | (follows pwndbg) | Version is dictated by pwndbg's `pyproject.toml` pin, not bumped independently |
 | `dev-python/mcp` | `https://pypi.org/pypi/mcp/json` | `info.version` is latest. No longer tied to `dev-python/semgrep`'s pin — bumps independently since CVE-2026-52869 forced `semgrep`'s RDEPEND to loosen instead (see provenance table) |
 | `dev-python/opentelemetry-*` (see provenance table) | `https://api.github.com/repos/open-telemetry/opentelemetry-python/releases/latest` and `.../opentelemetry-python-contrib/releases/latest` | Only needs bumping when `dev-python/semgrep`'s `opentelemetry-*` floors move. See "OpenTelemetry paired-tag resolution" below |
@@ -174,17 +176,35 @@ breaks at runtime (invisible to `pkgcheck`):
 
 - **`capstone6pwndbg`** — upstream vendors a forked capstone and imports
   from that module name. The ebuild's `src_prepare` rewrites those
-  imports to the system `dev-libs/capstone` (`s/capstone6pwndbg/capstone/`)
-  and reconciles one renamed constant (`CS_MODE_RISCVC` →
-  `CS_MODE_RISCV_C`). Re-verify both on each bump: the import name may
-  change, and new capstone symbols may be missing from Gentoo's capstone.
+  imports to the system `dev-libs/capstone` (`s/capstone6pwndbg/capstone/`).
+  A prior bump also needed a renamed-constant rewrite (`CS_MODE_RISCVC` →
+  `CS_MODE_RISCV_C`); the 2026.07.29 bump found upstream had renamed the
+  import itself, making that specific sed a no-op, so it was dropped —
+  don't assume the sed rules are stable across bumps, re-derive them from
+  a real diff each time. More importantly: **new capstone symbols missing
+  from Gentoo's capstone package is a real, recurring failure mode, not a
+  hypothetical.** The 2026.07.29 bump needed `CS_MODE_RISCV_ZBA`/`ZBB`/`ZBS`
+  and `CS_OPT_SYNTAX_NO_ALIAS_TEXT_COMPRESSED` (only in capstone
+  `6.0.0-Alpha8`+), but Gentoo's tree topped out at `alpha7` — this wasn't
+  caught by `pkgcheck` or even a shallow smoke test (`--batch -ex quit`
+  ran fine; only exercising `context`/`disassemble` against a real running
+  process hit the `NameError`). It required forking `dev-libs/capstone`
+  into this overlay (see provenance table) to unblock. On every bump:
+  don't just diff import lines — grep the *entire* new source tree for
+  `from capstone6pwndbg` and every `CS_*`/`X86_INS_*`/`RISCV_INS_*` symbol
+  it references, then check each one exists in the capstone version
+  actually available (Gentoo's tree, or this overlay's `capstone` fork if
+  one is currently in place) before trusting a clean build.
 - **`niche-elf`** — separate `dev-python/niche-elf` package; keep its
   version matching pwndbg's pin.
 - **`pycparser`** and other floors — diff the `pyproject.toml`
   `dependencies` list against the ebuild's `RDEPEND` and update bounds.
 
 On every bump: fetch the source at the pinned tag, `grep -r capstone6pwndbg`
-and diff `pyproject.toml`, then runtime smoke-test (`emerge` + launch).
+and diff `pyproject.toml`, then runtime smoke-test (`emerge` + launch —
+and actually drive a breakpoint + `context`/`disassemble` against a real
+binary, not just `--batch -ex quit`; the capstone symbol gap above only
+surfaced under real disassembly, not at import time).
 
 ### semgrep bump procedure
 

@@ -29,16 +29,16 @@ RDEPEND="
 	dev-debug/gdb[python,${PYTHON_SINGLE_USEDEP}]
 	~dev-python/gdb-pt-dump-0.0.0_p20240401[${PYTHON_SINGLE_USEDEP}]
 	$(python_gen_cond_dep '
-		>=dev-libs/capstone-6.0.0_alpha5[python,${PYTHON_USEDEP}]
+		>=dev-libs/capstone-6.0.0_alpha9[python,${PYTHON_USEDEP}]
 		>=dev-python/niche-elf-0.3.6[${PYTHON_USEDEP}]
 		>=dev-python/psutil-7.0.0[${PYTHON_USEDEP}]
 		>=dev-python/pycparser-3.0[${PYTHON_USEDEP}]
-		>=dev-python/pyelftools-0.32[${PYTHON_USEDEP}]
+		>=dev-python/pyelftools-0.33[${PYTHON_USEDEP}]
 		>=dev-python/pygments-2.19.2[${PYTHON_USEDEP}]
-		>=dev-python/requests-2.32.5[${PYTHON_USEDEP}]
-		>=dev-python/rich-14.1.0[${PYTHON_USEDEP}]
+		>=dev-python/requests-2.34.2[${PYTHON_USEDEP}]
+		>=dev-python/rich-15.0.0[${PYTHON_USEDEP}]
 		>=dev-python/sortedcontainers-2.4.0[${PYTHON_USEDEP}]
-		>=dev-python/tabulate-0.9.0[${PYTHON_USEDEP}]
+		>=dev-python/tabulate-0.10.0[${PYTHON_USEDEP}]
 		>=dev-python/typing-extensions-4.15.0[${PYTHON_USEDEP}]
 		>=dev-util/pwntools-4.14.1[${PYTHON_USEDEP}]
 		>=dev-util/ROPgadget-7.6[${PYTHON_USEDEP}]
@@ -55,11 +55,8 @@ src_prepare() {
 	# Upstream vendors a forked capstone (the "capstone6pwndbg" module) and
 	# imports from it directly. Point those imports at the system
 	# dev-libs/capstone instead, which provides the same capstone 6.0.0 API.
-	# The fork's only incompatible name is the RISC-V compressed mode, which
-	# capstone calls CS_MODE_RISCV_C rather than CS_MODE_RISCVC.
 	find . -name '*.py' -exec sed -i \
 		-e 's/capstone6pwndbg/capstone/g' \
-		-e 's/CS_MODE_RISCVC/CS_MODE_RISCV_C/g' \
 		{} + || die "capstone de-vendor sed failed"
 }
 
