@@ -89,17 +89,22 @@ when looking up upstream changes or comparing against the source ebuilds.
 | `app-misc/claude-desktop` | local | Written from scratch — no upstream ebuild reference. Repackages Anthropic's official `.deb` (a prebuilt Electron bundle) into `/opt`. `RDEPEND` derived from the shipped binaries' ELF `NEEDED` set; the Debian maintainer scripts (AppArmor userns profile, apt-repo registration) are intentionally dropped as Debian-specific. Docs at https://code.claude.com/docs/en/desktop-linux |
 | `dev-debug/pwndbg` | Gentoo (official) | Version-pinned fork, now **ahead** of the official tree and carrying local patches (capstone de-vendor via `src_prepare`, `niche-elf` dep, `pycparser` floor). No longer byte-identical to upstream — do not assume a clean diff/rebase |
 | `dev-python/niche-elf` | local | Created here from pwndbg's PyPI dependency (upstream `github.com/pwndbg/niche-elf`); pure-Python |
+| `dev-python/chromadb` | local | Written from scratch — upstream never publishes an sdist for this package. Installed via the real prebuilt manylinux wheel instead of vendoring its ~1020-crate Rust/PyO3 workspace (`DISTUTILS_USE_PEP517=no`, custom `python_compile()` calling `distutils_wheel_install()`), patterned after `dev-util/semgrep-core-bin`. The compiled `.so` only links `libc`/`libm`/`libpthread`/`libdl`/`ld-linux` (verified via `scanelf -qn`) — no hidden native RDEPEND risk from skipping the source build |
 | `dev-python/face` | Pentoo | Forked, maintainer reassigned. Pulled in as a `dev-python/glom` sub-dependency |
 | `dev-python/glom` | Pentoo | Forked, maintainer reassigned. Pentoo's copy was the only source for a `dev-python/semgrep` dependency |
 | `dev-python/httpx-sse` | Pentoo | Forked, maintainer reassigned. Pulled in as a `dev-python/mcp` sub-dependency |
-| `dev-python/mcp` | Pentoo | Forked, maintainer reassigned, version-bumped (1.14.0 → 1.23.3) to satisfy `dev-python/semgrep`'s exact `mcp==` pin |
+| `dev-python/langflow-base` | local | Written from scratch — Langflow's Python backend (API/CLI only; the bundled npm/React frontend and the root `langflow` PyPI package are out of scope). No sdist upstream — same prebuilt-wheel-install mechanism as `dev-python/chromadb`. `IUSE="anthropic google-genai ollama openai weaviate"` gates optional LangChain providers that don't appear in upstream's own `requires_dist` at all (their provenance is the running component registry, not dependency metadata — grepped from the wheel's component source, not derived from a pyproject extra); `weaviate` is real-upstream-mandatory as of `0.11.0` but stays default-off since `weaviate-client` still pins `grpcio<1.80.0` and this tree only carries `1.80.0+` |
+| `dev-python/langflow-sdk` | local | Written from scratch — thin Python client for the Langflow REST API. Wheel-only upstream (every release, including pre-releases), same install mechanism as `dev-python/chromadb` |
+| `dev-python/lfx` | local | Written from scratch — Langflow's executor/CLI, `langflow-base`'s own dependency. Wheel-only upstream, same install mechanism as `dev-python/chromadb` |
+| `dev-python/mcp` | Pentoo | Forked, maintainer reassigned, version-bumped (1.14.0 → 1.29.0). Bumped past `dev-python/semgrep`'s exact `mcp==1.23.3` pin to fix CVE-2026-52869 (session-hijacking-class auth bypass, GHSA-jpw9-pfvf-9f58) — the fix was backported to the 1.x line (tagged `[v1.x]` upstream) rather than only landing in the `2.0.0` rewrite, so `semgrep`'s RDEPEND was loosened to `>=1.27.2,<2` instead of mirroring the exact pin. See "semgrep bump procedure" below |
 | `dev-python/opentelemetry-{proto,exporter-otlp-proto-common,exporter-otlp-proto-http,instrumentation,instrumentation-requests,instrumentation-threading,util-http}` | local | Created here — not yet packaged in Gentoo or GURU. `proto`/`exporter-otlp-proto-{common,http}` track the same `opentelemetry-python` monorepo tag as the tree's existing `opentelemetry-api`/`sdk`/`semantic-conventions` (currently `1.43.0`); `instrumentation`/`instrumentation-{requests,threading}`/`util-http` track the sibling `opentelemetry-python-contrib` repo (currently `0.64b0`, Gentoo-versioned `0.64_beta0`). See "OpenTelemetry paired-tag resolution" below before bumping any of these |
-| `dev-python/semgrep` | Pentoo | Forked, maintainer reassigned, heavily version-bumped (1.75.0 → 1.170.0, ~2 years/95 releases). See "semgrep bump procedure" below |
+| `dev-python/semgrep` | Pentoo | Forked, maintainer reassigned, heavily version-bumped (1.75.0 → 1.171.0, ~2 years/95 releases). See "semgrep bump procedure" below |
 | `dev-python/sse-starlette` | Pentoo | Forked, maintainer reassigned. Pulled in as a `dev-python/mcp` sub-dependency |
 | `dev-util/Tensile` | Gentoo (official) | Temporary local hold — do not update; remove once the official tree carries a sufficient version |
 | `dev-util/semgrep-core-bin` | Pentoo | Forked, maintainer reassigned, heavily reworked. Upstream's wheel now bundles `semgrep-core`'s native shared-lib dependencies (`bin/libs/`) instead of linking the host's — install layout changed from a flat `dobin` to a private `/usr/libexec/semgrep-core-bin/` dir + symlink. See "semgrep bump procedure" below |
 | `dev-vcs/gitleaks` | Pentoo | Forked, maintainer reassigned |
 | `net-firewall/littlesnitch` | local | Written from scratch — no upstream ebuild reference; product page at https://obdev.at/products/littlesnitch-linux/index.html |
+| `sci-libs/onnxruntime` | GURU | Forked, maintainer reassigned, now meaningfully diverged from the GURU copy — 4 local patches (`relax-the-dependency-on-flatbuffers`, `no-werror`, `prevent-generation-of-PIE`, `use-system-libraries`). The `use-system-libraries` patch needs re-verifying on every bump, not just reapplying: a 1.28.0 bump found one hunk broken by an upstream-inserted Windows ARM64/ARM64EC branch that shifted context enough for `patch --fuzz` to silently match the *wrong* `FIND_PACKAGE_ARGS NAMES cpuinfo` occurrence (a Windows-only branch this tree never builds) instead of the Linux one it's meant to target — regenerated fresh against the new source and confirmed zero-fuzz apply rather than trust the fuzzy match. `EIGEN_COMMIT` is a separate pin (`cmake/deps.txt`'s `eigen` entry) that doesn't necessarily move between bumps — check before assuming it needs updating |
 | `sci-ml/lemonade-desktop` | local | Written from scratch — the native Tauri/WebKitGTK desktop client (`src/app` in the same monorepo as `sci-ml/lemonade-server`, a thin WebView pointed at it; doesn't bundle the server). Uses `cargo.eclass` with a real, fully-generated `CRATES` list (~590 entries, parsed from `src-tauri/Cargo.lock`) for fully offline/hermetic Rust vendoring — unlike the npm side, crates.io permanently hosts every published version at a fixed URL, so this needed no self-hosting, just the generated list. The npm side (`src/app`'s own React/webpack frontend, separate from the server's) still needs `RESTRICT="network-sandbox"` same as `lemonade-server`'s `USE=webapp`. `LICENSE` is the union of every vendored crate's own declared license (scanned from each fetched `.crate`'s `Cargo.toml`, not guessed) plus Apache-2.0 for the app itself. See "Lemonade bump procedure" below |
 | `sci-ml/lemonade-server` | local | Written from scratch — no Gentoo/GURU ebuild exists upstream; used Arch's official `lemonade` PKGBUILD as boilerplate. Builds only `lemond`/`lemonade` (server + CLI); the Tauri desktop app is `sci-ml/lemonade-desktop`, a separate package. Carries two local patches (`find_package(CONFIG)` fallback for `dev-cpp/cpp-httplib`, since Gentoo ships a CMake package config rather than a `.pc` file; a `pkg_search_module` fix for `mbedcrypto`, since Gentoo's `net-libs/mbedtls` slots it as `mbedcrypto-3`). `USE=webapp` (default on) gates the bundled web UI, which needs `net-libs/nodejs[npm]` and `RESTRICT="network-sandbox"` — Gentoo has no `cargo.eclass` equivalent for vendoring npm deps offline. See "Lemonade bump procedure" below |
 | `sci-ml/ollama` | GURU | Forked, maintainer reassigned, refactored |
@@ -125,6 +130,18 @@ with `curl` rather than scraping vendor product pages. For GitHub-hosted
 projects the JSON response's `tag_name` field is the latest stable
 release (excluding pre-releases).
 
+For anything not listed below — which is most of the overlay, including
+the ~120 straightforward `pypi`-eclass `dev-python` packages pulled in for
+Langflow — run `.tools/check-bumps/check-bumps.py` instead of hand-deriving
+a check. It auto-detects a strategy per package from the ebuild itself
+(`inherit pypi` → PyPI JSON API; a GitHub-hosted `SRC_URI` → GitHub
+releases/tags API; `ruby-fakegem` with no `SRC_URI` → rubygems.org) and only
+needs a `.tools/check-bumps/overrides.json` entry for genuine exceptions.
+It's report-only — it tells you what's newer, not whether bumping is safe;
+every flagged bump still needs its real transitive pin checked before
+applying (see `.tools/check-bumps/overrides.json` for logged examples of
+where the naive "latest on PyPI" answer was wrong).
+
 | Package | URL | Notes |
 |---|---|---|
 | `app-emulation/vmware-modules` | `https://api.github.com/repos/alex-moch/vmware-modules/commits` | Tracks `master`; ebuild's `COMMIT=` should match the first `sha` in the JSON response |
@@ -133,12 +150,13 @@ release (excluding pre-releases).
 | `app-misc/claude-desktop` | `https://downloads.claude.ai/claude-desktop/apt/stable/dists/stable/main/binary-amd64/Packages` | No releases feed — parse the apt `Packages` index. Latest: `curl -fsSL <url> \| awk '/^Version:/{print $2}' \| sort -V \| tail -1`. Distfile is `claude-desktop_${PV}_${arch}.deb` under `.../pool/main/c/claude-desktop/`; the `.deb`'s own `SHA256` is in the same `Packages` block. Since it's a binary repackage, on bump re-scan the bundle's ELF `NEEDED` sonames (`scanelf -qn`) for new library deps before trusting the old `RDEPEND` |
 | `dev-debug/pwndbg` | `https://api.github.com/repos/pwndbg/pwndbg/releases/latest` | Tag format `YYYY.MM.DD`; ebuild version drops the dots. See bump procedure below |
 | `dev-python/niche-elf` | (follows pwndbg) | Version is dictated by pwndbg's `pyproject.toml` pin, not bumped independently |
-| `dev-python/mcp` | `https://pypi.org/pypi/mcp/json` | `info.version` is latest. Only needs bumping when `dev-python/semgrep`'s exact `mcp==` pin moves |
+| `dev-python/mcp` | `https://pypi.org/pypi/mcp/json` | `info.version` is latest. No longer tied to `dev-python/semgrep`'s pin — bumps independently since CVE-2026-52869 forced `semgrep`'s RDEPEND to loosen instead (see provenance table) |
 | `dev-python/opentelemetry-*` (see provenance table) | `https://api.github.com/repos/open-telemetry/opentelemetry-python/releases/latest` and `.../opentelemetry-python-contrib/releases/latest` | Only needs bumping when `dev-python/semgrep`'s `opentelemetry-*` floors move. See "OpenTelemetry paired-tag resolution" below |
 | `dev-python/semgrep` | `https://api.github.com/repos/semgrep/semgrep/releases/latest` | Tag prefixed with `v`. See "semgrep bump procedure" below before touching this or `dev-util/semgrep-core-bin` |
 | `dev-util/semgrep-core-bin` | (follows `dev-python/semgrep`) | Always bump in lockstep with `dev-python/semgrep` — same `PV` |
 | `dev-vcs/gitleaks` | `https://api.github.com/repos/gitleaks/gitleaks/releases/latest` | Tag prefixed with `v` |
 | `net-firewall/littlesnitch` | `https://obdev.at/products/littlesnitch-linux/download.html` | Parse the download URLs in the page (e.g. `littlesnitch-1.0.5-1-x86_64.pkg.tar.zst`); no machine-readable feed |
+| `sci-libs/onnxruntime` | `https://api.github.com/repos/microsoft/onnxruntime/releases/latest` | Tag prefixed with `v`. Not a pure rename even when the ebuild looks unchanged — re-verify the 4 local patches still apply (check for zero-fuzz, don't trust a fuzzy `patch --fuzz` match blindly; see provenance table for a real instance of `patch` silently matching the wrong hunk) and re-check `cmake/deps.txt`'s `eigen` entry against the ebuild's `EIGEN_COMMIT` before assuming it moved |
 | `sci-ml/lemonade-desktop` | (follows `sci-ml/lemonade-server`) | Always bump in lockstep with `sci-ml/lemonade-server` — same `PV`, same monorepo tag. See "Lemonade bump procedure" below — the `CRATES` list needs fully regenerating from the new tag's `src-tauri/Cargo.lock`, not hand-edited |
 | `sci-ml/lemonade-server` | `https://api.github.com/repos/lemonade-sdk/lemonade/releases/latest` | Tag prefixed with `v`. See "Lemonade bump procedure" below before touching this — the two local patches and `USE=webapp` wiring need re-verifying, not just the version string |
 | `sci-ml/ollama` | `https://api.github.com/repos/ollama/ollama/releases/latest` | Tag prefixed with `v`; check `https://api.github.com/repos/ollama/ollama/releases` (without `/latest`) to also see pre-releases |
@@ -199,7 +217,11 @@ and diff `pyproject.toml`, then runtime smoke-test (`emerge` + launch).
   <dir>`), not just `--version`.
 - **`dev-python/mcp` is an exact pin** (`mcp==X.Y.Z` in semgrep's
   `pyproject.toml`) — check it on every bump and re-bump `dev-python/mcp`
-  in lockstep if it moved.
+  in lockstep if it moved. As of `mcp-1.29.0` this overlay deliberately does
+  *not* mirror the exact pin (semgrep's real pin is still `mcp==1.23.3`, a
+  CVE fix forced `mcp` ahead of it, see provenance table) — if semgrep's own
+  pin ever moves past `1.29.0`, re-evaluate whether the RDEPEND should go
+  back to an exact pin or stay loosened.
 - **`dev-python/wcmatch` is pinned `~=8.3` upstream** but this overlay's
   tree only carries `10.x`/`11.0` (a two-major-version gap) — the RDEPEND
   uses a loosened `>=8.3` floor since no `8.x` ebuild exists here. This is
