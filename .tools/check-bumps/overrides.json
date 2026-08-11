@@ -24,6 +24,8 @@
   "sci-ml/lemonade-desktop": {"skip": "follows sci-ml/lemonade-server -- check that package instead"},
   "sci-ml/ollama": {"strategy": "github-release", "repo": "ollama/ollama"},
 
+  "net-misc/onedrive": {"strategy": "github-release", "repo": "abraunegg/onedrive"},
+
   "dev-debug/pwndbg": {"strategy": "github-release", "repo": "pwndbg/pwndbg", "strip_dots": true},
 
   "sys-fs/zfs": {"strategy": "github-release", "repo": "openzfs/zfs", "strip_prefix": "zfs"},
