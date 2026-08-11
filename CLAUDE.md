@@ -108,7 +108,7 @@ when looking up upstream changes or comparing against the source ebuilds.
 | `net-misc/onedrive` | Gentoo (official) | Forked, maintainer reassigned, version-bumped ahead of the official tree (2.5.10 → 2.5.11 — the official tree hadn't packaged it as of the fork). No local patches: diffed `configure.ac`/`Makefile.in`/`config` between the two tags before bumping — same `curl`/`sqlite3`/`dbus`/optional-`libnotify` dependency set, the new `src/localAuth.d` (GUI OAuth loopback listener, a 2.5.11 feature) only uses Phobos stdlib, and the new `contrib/images/onedrive-notifications.svg` installs via upstream's existing `Makefile.in` icon rule gated on the same `NOTIFICATIONS` flag the ebuild's `libnotify` USE already wires up |
 | `sci-libs/onnxruntime` | GURU | Forked, maintainer reassigned, now meaningfully diverged from the GURU copy — 4 local patches (`relax-the-dependency-on-flatbuffers`, `no-werror`, `prevent-generation-of-PIE`, `use-system-libraries`). The `use-system-libraries` patch needs re-verifying on every bump, not just reapplying: a 1.28.0 bump found one hunk broken by an upstream-inserted Windows ARM64/ARM64EC branch that shifted context enough for `patch --fuzz` to silently match the *wrong* `FIND_PACKAGE_ARGS NAMES cpuinfo` occurrence (a Windows-only branch this tree never builds) instead of the Linux one it's meant to target — regenerated fresh against the new source and confirmed zero-fuzz apply rather than trust the fuzzy match. `EIGEN_COMMIT` is a separate pin (`cmake/deps.txt`'s `eigen` entry) that doesn't necessarily move between bumps — check before assuming it needs updating |
 | `sci-ml/lemonade-desktop` | local | Written from scratch — the native Tauri/WebKitGTK desktop client (`src/app` in the same monorepo as `sci-ml/lemonade-server`, a thin WebView pointed at it; doesn't bundle the server). Uses `cargo.eclass` with a real, fully-generated `CRATES` list (~590 entries, parsed from `src-tauri/Cargo.lock`) for fully offline/hermetic Rust vendoring — unlike the npm side, crates.io permanently hosts every published version at a fixed URL, so this needed no self-hosting, just the generated list. The npm side (`src/app`'s own React/webpack frontend, separate from the server's) still needs `RESTRICT="network-sandbox"` same as `lemonade-server`'s `USE=webapp`. `LICENSE` is the union of every vendored crate's own declared license (scanned from each fetched `.crate`'s `Cargo.toml`, not guessed) plus Apache-2.0 for the app itself. See "Lemonade bump procedure" below |
-| `sci-ml/lemonade-server` | local | Written from scratch — no Gentoo/GURU ebuild exists upstream; used Arch's official `lemonade` PKGBUILD as boilerplate. Builds only `lemond`/`lemonade` (server + CLI); the Tauri desktop app is `sci-ml/lemonade-desktop`, a separate package. Carries two local patches (`find_package(CONFIG)` fallback for `dev-cpp/cpp-httplib`, since Gentoo ships a CMake package config rather than a `.pc` file; a `pkg_search_module` fix for `mbedcrypto`, since Gentoo's `net-libs/mbedtls` slots it as `mbedcrypto-3`). `USE=webapp` (default on) gates the bundled web UI, which needs `net-libs/nodejs[npm]` and `RESTRICT="network-sandbox"` — Gentoo has no `cargo.eclass` equivalent for vendoring npm deps offline. See "Lemonade bump procedure" below |
+| `sci-ml/lemonade-server` | local | Written from scratch — no Gentoo/GURU ebuild exists upstream; used Arch's official `lemonade` PKGBUILD as boilerplate. Builds only `lemond`/`lemonade` (server + CLI); the Tauri desktop app is `sci-ml/lemonade-desktop`, a separate package. Carried two local patches through 11.5.1 (a `find_package(CONFIG)` fallback for `dev-cpp/cpp-httplib`, since Gentoo ships a CMake package config rather than a `.pc` file; a `pkg_search_module` fix for `mbedcrypto`, since Gentoo's `net-libs/mbedtls` slots it as `mbedcrypto-3`). As of 11.5.2, upstream rewrote httplib detection into its own `cmake/DetectSystemHttplib.cmake` with a native `find_package(httplib CONFIG)` fallback — functionally the same fix — so the httplib patch was dropped entirely; only the mbedcrypto-slot patch remains, re-targeted at the root `CMakeLists.txt` (upstream moved that whole probe there from `src/cpp/cli/CMakeLists.txt` in the same release). `USE=webapp` (default on) gates the bundled web UI, which needs `net-libs/nodejs[npm]` and `RESTRICT="network-sandbox"` — Gentoo has no `cargo.eclass` equivalent for vendoring npm deps offline. See "Lemonade bump procedure" below |
 | `sci-ml/ollama` | GURU | Forked, maintainer reassigned, refactored |
 
 ### VMware Workstation version encoding
@@ -162,7 +162,7 @@ where the naive "latest on PyPI" answer was wrong).
 | `net-misc/onedrive` | `https://api.github.com/repos/abraunegg/onedrive/releases/latest` | Tag prefixed with `v`. `.tools/check-bumps` needs a `github-release` override for this one — `SRC_URI` uses a `codeload.github.com/OWNER/REPO/tar.gz/v${PV}` URL, and the script's github-URL regex only recognizes `.../archive/...` and `.../releases/...` paths, not codeload's own scheme. Written in D (GDC); before trusting a bump, diff `configure.ac` for new `PKG_CHECK_MODULES` probes and grep new/changed `src/*.d` files for imports outside Phobos stdlib — either would mean a new `RDEPEND` |
 | `sci-libs/onnxruntime` | `https://api.github.com/repos/microsoft/onnxruntime/releases/latest` | Tag prefixed with `v`. Not a pure rename even when the ebuild looks unchanged — re-verify the 4 local patches still apply (check for zero-fuzz, don't trust a fuzzy `patch --fuzz` match blindly; see provenance table for a real instance of `patch` silently matching the wrong hunk) and re-check `cmake/deps.txt`'s `eigen` entry against the ebuild's `EIGEN_COMMIT` before assuming it moved |
 | `sci-ml/lemonade-desktop` | (follows `sci-ml/lemonade-server`) | Always bump in lockstep with `sci-ml/lemonade-server` — same `PV`, same monorepo tag. See "Lemonade bump procedure" below — the `CRATES` list needs fully regenerating from the new tag's `src-tauri/Cargo.lock`, not hand-edited |
-| `sci-ml/lemonade-server` | `https://api.github.com/repos/lemonade-sdk/lemonade/releases/latest` | Tag prefixed with `v`. See "Lemonade bump procedure" below before touching this — the two local patches and `USE=webapp` wiring need re-verifying, not just the version string |
+| `sci-ml/lemonade-server` | `https://api.github.com/repos/lemonade-sdk/lemonade/releases/latest` | Tag prefixed with `v`. See "Lemonade bump procedure" below before touching this — the local patch(es) (one as of 11.5.2, was two through 11.5.1) and `USE=webapp` wiring need re-verifying, not just the version string |
 | `sci-ml/ollama` | `https://api.github.com/repos/ollama/ollama/releases/latest` | Tag prefixed with `v`; check `https://api.github.com/repos/ollama/ollama/releases` (without `/latest`) to also see pre-releases |
 
 `acct-group/*` and `acct-user/*` packages have no upstream — they are
@@ -346,27 +346,45 @@ that can silently stop applying on a bump:
   `${CMAKE_SYSTEM_VERSION}` inside an `if()` — Gentoo's toolchain file
   sets `CMAKE_SYSTEM_NAME` explicitly, which puts CMake in
   pseudo-cross-compile mode and leaves `CMAKE_SYSTEM_VERSION` unset).
-  `files/lemonade-server-*-system-httplib-config.patch` adds a
-  `find_package(httplib CONFIG QUIET)` fallback, comparing
+  Through 11.5.1, `files/lemonade-server-*-system-httplib-config.patch`
+  added a `find_package(httplib CONFIG QUIET)` fallback, comparing
   `HTTPLIB_VERSION` manually against the floor instead of passing a
   version arg to `find_package()` — httplib's version file only
   accepts requests with a matching major **and minor** (pre-1.0 semver),
   which would reject a newer installed version against an older floor.
+  **As of 11.5.2, upstream shipped the equivalent fix itself**: a new
+  `cmake/DetectSystemHttplib.cmake` whose step 2 does exactly this
+  (pre-checks `httplibConfigVersion.cmake`'s `PACKAGE_VERSION` by regex,
+  then calls `find_package(httplib CONFIG QUIET)` with no version arg).
+  The old patch's hunks no longer apply at all (not fuzzy — the
+  `pkg_search_module(HTTPLIB ...)` call and surrounding code it targeted
+  were deleted outright) — confirmed via a real build that dropping the
+  patch still logs `Using system cpp-httplib (version X, >= floor)`.
+  Don't assume this fix is permanent upstream behavior; re-check on every
+  bump in case it regresses, but don't reflexively re-add the patch
+  either — verify against the current source first.
 - **`net-libs/mbedtls`** is SLOT `3` and names its pkg-config module,
   headers, and library `mbedcrypto-3`/`mbedtls3/mbedtls/md.h`/
   `libmbedcrypto-3.so`, not plain
-  `mbedcrypto` — same failure mode, different subsystem
-  (`src/cpp/cli/CMakeLists.txt`'s digest-verification dependency).
-  `files/lemonade-server-*-system-mbedcrypto-slot.patch` adds a
-  fallback `pkg_check_modules` call using the `-3`-suffixed module
+  `mbedcrypto` — same failure mode, different subsystem (the
+  digest-verification dependency probe, `pkg_check_modules(MBEDTLS QUIET
+  mbedtls mbedx509 mbedcrypto)`). `files/lemonade-server-*-system-mbedcrypto-slot.patch`
+  adds a fallback `pkg_check_modules` call using the `-3`-suffixed module
   names when the unsuffixed one fails. **This patch's exact shape is
   not stable across bumps** — 10.10.0→11.0.0 only needed a single
   `mbedcrypto` module (fixed via `pkg_search_module` alternate-name
-  syntax), but 11.0.0→11.5.0 rewrote upstream's probe to require
+  syntax), 11.0.0→11.5.0 rewrote upstream's probe to require
   `mbedtls`+`mbedx509`+`mbedcrypto` together (for new CLI HTTPS/TLS
-  support), which needed the whole patch rewritten, not just re-applied
-  with a line offset. Always diff `cli/CMakeLists.txt`'s digest-crypto
-  block against the patch before assuming it still applies.
+  support), and 11.5.1→11.5.2 kept the probe's logic identical but moved
+  the whole block from `src/cpp/cli/CMakeLists.txt` into the root
+  `CMakeLists.txt` (part of centralizing the httplib/mbedtls wiring so
+  both the CLI and server link one shared `lemonade-digest-crypto`
+  target) — the patch needed re-targeting at the new file, not just a
+  line offset. Always diff the *current* upstream file holding this
+  probe (check both locations — it has moved before) against the patch
+  before assuming it still applies, and confirm via a real build that
+  the configure log says `Using system mbedtls for CLI HTTPS and digest
+  verification`, not a `FetchContent` fallback message.
 
 On every bump: diff the upstream `CMakeLists.txt`/`cli/CMakeLists.txt`
 against the patched lines (context drift breaks the patch silently if

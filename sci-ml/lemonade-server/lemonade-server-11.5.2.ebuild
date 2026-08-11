@@ -21,17 +21,22 @@ IUSE="+systemd +webapp"
 RESTRICT="test webapp? ( network-sandbox )"
 
 # dev-cpp/cli11 and dev-cpp/nlohmann_json are header-only libs detected via
-# find_package(); dev-cpp/cpp-httplib ships a CMake package config rather
-# than a .pc file, so PATCHES adds a find_package(CONFIG) fallback for it
-# (upstream only probes pkg-config). The server links against system
-# libcurl/libwebsockets/mbedtls/libzstd/libcap/libdrm_amdgpu (unconditionally)
-# and libsystemd (systemd USE flag) instead of upstream's FetchContent
-# fallback; these are compiled at both build and run time, hence
-# COMMON_DEPEND. x11-libs/libdrm went from a header-only DEPEND (raw ioctl
-# calls against its UAPI headers) to an actual link as of 11.0.0
-# (server/backends/ryzenai's NPU sensor query). As of 11.5.0 the CLI's mbedtls
-# probe needs all three of mbedtls/mbedx509/mbedcrypto (new HTTPS/TLS remote
-# support) — PATCHES also extends the mbedcrypto-slot fix to cover this.
+# find_package(). dev-cpp/cpp-httplib ships a CMake package config rather
+# than a .pc file; as of 11.5.2 upstream's own cmake/DetectSystemHttplib.cmake
+# already falls back to find_package(httplib CONFIG) when pkg-config misses,
+# so the local find_package(CONFIG) patch this ebuild used to carry is gone
+# — re-check this on every bump in case upstream regresses it. The server
+# links against system libcurl/libwebsockets/mbedtls/libzstd/libcap/
+# libdrm_amdgpu (unconditionally) and libsystemd (systemd USE flag) instead
+# of upstream's FetchContent fallback; these are compiled at both build and
+# run time, hence COMMON_DEPEND. x11-libs/libdrm went from a header-only
+# DEPEND (raw ioctl calls against its UAPI headers) to an actual link as of
+# 11.0.0 (server/backends/ryzenai's NPU sensor query). As of 11.5.0 the
+# mbedtls probe needs all three of mbedtls/mbedx509/mbedcrypto (HTTPS/TLS
+# remote support) — PATCHES extends it with the mbedcrypto-slot fix. That
+# probe lived in src/cpp/cli/CMakeLists.txt through 11.5.1; 11.5.2 moved it
+# (unchanged in substance) into the root CMakeLists.txt, so the patch target
+# moved with it — check this again on the next bump too.
 COMMON_DEPEND="
 	net-libs/libwebsockets
 	net-libs/mbedtls
@@ -68,7 +73,6 @@ BDEPEND="
 "
 
 PATCHES=(
-	"${FILESDIR}/${P}-system-httplib-config.patch"
 	"${FILESDIR}/${P}-system-mbedcrypto-slot.patch"
 )
 
