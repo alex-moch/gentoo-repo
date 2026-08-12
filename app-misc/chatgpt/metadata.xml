@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>gentoo@alexmoch.com</email>
+		<name>Alexander Moch</name>
+	</maintainer>
+	<longdescription lang="en">
+		The ChatGPT desktop application for Linux, repackaged from
+		OpenAI's official .deb distribution. Bundles ChatGPT, ChatGPT
+		Work, and Codex (including its "computer use" browser/device
+		automation tooling) in a single Electron app. Still a public
+		preview as of its Linux release; sign-in requires an OpenAI
+		account.
+	</longdescription>
+	<upstream>
+		<doc lang="en">https://developers.openai.com/codex/app</doc>
+	</upstream>
+</pkgmetadata>
