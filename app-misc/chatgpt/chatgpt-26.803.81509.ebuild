@@ -28,6 +28,21 @@ LICENSE="all-rights-reserved"
 SLOT="0"
 KEYWORDS="~amd64 ~arm64"
 
+# Upstream ships every UI locale as four Chromium resource packs (a base
+# file plus _FEMININE/_MASCULINE/_NEUTER ICU grammatical-gender variants,
+# confirmed present for all 55 locales, identically on both the amd64 and
+# arm64 payloads). en-US is always installed regardless of L10N as
+# Chromium's resource-bundle fallback; see src_install.
+IUSE="
+	l10n_af l10n_am l10n_ar l10n_bg l10n_bn l10n_ca l10n_cs l10n_da l10n_de
+	l10n_el l10n_en-GB l10n_es l10n_es-419 l10n_et l10n_fa l10n_fi l10n_fil
+	l10n_fr l10n_gu l10n_he l10n_hi l10n_hr l10n_hu l10n_id l10n_it l10n_ja
+	l10n_kn l10n_ko l10n_lt l10n_lv l10n_ml l10n_mr l10n_ms l10n_nb l10n_nl
+	l10n_pl l10n_pt-BR l10n_pt-PT l10n_ro l10n_ru l10n_sk l10n_sl l10n_sr
+	l10n_sv l10n_sw l10n_ta l10n_te l10n_th l10n_tr l10n_uk l10n_ur l10n_vi
+	l10n_zh-CN l10n_zh-TW
+"
+
 # Proprietary prebuilt Electron bundle: not redistributable, must not be
 # stripped or byte-modified.
 RESTRICT="bindist mirror strip"
@@ -95,6 +110,48 @@ src_install() {
 	local dir="/opt/${PN}"
 	dodir "${dir}"
 	cp -a usr/lib/chatgpt/. "${ED}${dir}/" || die "failed to install bundle"
+
+	# Only keep the locale packs actually requested via L10N, plus en-US
+	# unconditionally: Chromium's resource bundle falls back to it when the
+	# active locale has no pack of its own, so dropping it entirely risks a
+	# hard failure to find any string table at all.
+	local keep="|en-US|" locale
+	for locale in ${L10N}; do
+		keep+="${locale}|"
+	done
+	local pak base
+	for pak in "${ED}${dir}"/locales/*.pak; do
+		base=${pak##*/}
+		base=${base%.pak}
+		base=${base%_FEMININE}
+		base=${base%_MASCULINE}
+		base=${base%_NEUTER}
+		[[ ${keep} == *"|${base}|"* ]] || rm -f "${pak}"
+	done
+
+	# Several bundled native Node addons (device-kit-oai's HID/serial
+	# support, classic-level for the browser-control plugin) ship prebuilt
+	# binaries for every platform npm knows about, not just Linux -- Node's
+	# own prebuild loader always resolves to the single matching
+	# platform/arch/libc file at require() time, so the rest are dead
+	# weight. Keep only the current arch's glibc build; both the amd64 and
+	# arm64 upstream .deb payloads were confirmed to ship the identical
+	# unpruned multi-platform set, so this is not an amd64-only assumption.
+	local keep_platform
+	case ${ARCH} in
+		amd64) keep_platform="linux-x64" ;;
+		arm64) keep_platform="linux-arm64" ;;
+		*) die "unhandled ARCH ${ARCH}: add its prebuilds platform tag here" ;;
+	esac
+	local prebuilds_dir
+	while IFS= read -r -d '' prebuilds_dir; do
+		find "${prebuilds_dir}" -mindepth 1 -maxdepth 1 -type d \
+			! -name "*${keep_platform}" -exec rm -rf {} +
+		# linux-x64 (glibc) and *.musl.node builds coexist as same-named
+		# files inside one kept directory for some addons; glibc is the
+		# only variant Gentoo ever needs.
+		find "${prebuilds_dir}" -maxdepth 2 -type f -name '*musl*' -delete
+	done < <(find "${ED}${dir}" -type d -name prebuilds -print0)
 
 	# codex-launcher is upstream's own thin entry-point wrapper (resolves
 	# its own directory and execs the ChatGPT binary alongside it); keep
