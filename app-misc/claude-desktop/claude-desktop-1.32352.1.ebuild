@@ -30,9 +30,16 @@ QA_PREBUILT="opt/${PN}/*"
 
 # Runtime libraries the bundle links against (derived from the ELF NEEDED
 # entries of the shipped binaries) plus the helpers it dlopen()s at runtime
-# (libsecret for the keyring, libnotify, libXtst for global hotkeys) and the
-# desktop-integration tools the app shells out to. libcap-ng and libseccomp
-# are pulled in by the bundled `resources/virtiofsd` VM filesystem helper.
+# (libsecret for the keyring, libnotify) and the desktop-integration tools
+# the app shells out to. libcap-ng and libseccomp are pulled in by the
+# bundled `resources/virtiofsd` VM filesystem helper. Re-scanned on the
+# 1.32352.1 bump (scanelf -qn across every ELF/.node file in the bundle,
+# not just the main binary): x11-libs/libXtst and sys-apps/util-linux
+# (libuuid1) dropped — neither soname appears anywhere in the bundle any
+# more. Global shortcuts now go through org.freedesktop.portal.GlobalShortcuts
+# (confirmed via a literal string match in the main binary), already covered
+# by sys-apps/xdg-desktop-portal; Chromium's own base::Uuid replaced the
+# external libuuid dependency some releases back.
 RDEPEND="
 	app-accessibility/at-spi2-core
 	app-crypt/libsecret
@@ -44,7 +51,6 @@ RDEPEND="
 	media-libs/mesa
 	net-print/cups
 	sys-apps/dbus
-	sys-apps/util-linux
 	sys-apps/xdg-desktop-portal
 	sys-libs/libcap-ng
 	sys-libs/libseccomp
@@ -57,7 +63,6 @@ RDEPEND="
 	x11-libs/libXext
 	x11-libs/libXfixes
 	x11-libs/libXrandr
-	x11-libs/libXtst
 	x11-libs/libdrm
 	x11-libs/libnotify
 	x11-libs/libxcb
