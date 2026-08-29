@@ -6,7 +6,7 @@
 # Import the stage, then build:
 #   podman import stage3b-agent-amd64-latest.tar.bz2 localhost/gentoo-stage3b-agent:20260713
 #   podman build -t localhost/gentoo-agent:20260713 -f .devcontainer/Containerfile .devcontainer
-FROM localhost/gentoo-stage3b-agent:20260713
+FROM localhost/gentoo-pentest:20260730
 
 # Install binary packages from the binhost, reusing one only on a USE match. This
 # needs a binhost in binrepos.conf and its key trusted in /etc/portage/gnupg.
@@ -15,11 +15,7 @@ RUN echo 'FEATURES="getbinpkg"' >> /etc/portage/make.conf
 # Sync the ebuild trees from git; the stage carries the repo config but not the
 # trees. The live overlay is bind-mounted over /var/db/repos/ajm at runtime, so
 # this synced copy only needs to resolve the profile.
-RUN rm -rf /var/db/repos/* /etc/portage/repos.conf/* \
- && eselect repository add gentoo git https://github.com/gentoo-mirror/gentoo \
- && eselect repository add ajm git https://gitlab.com/alex-moch/gentoo-repo.git \
- && emerge --sync \
- && getuto
+RUN getuto
 
 # Non-root user: Claude Code's bypassPermissions mode refuses to run as
 # root, even though the container itself is the sandbox boundary here.

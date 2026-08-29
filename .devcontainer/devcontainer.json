@@ -2,7 +2,7 @@
 	// VS Code Dev Container for the ajm overlay, on the gentoo-agent base image.
 	// Targets Podman; set "dev.containers.dockerPath": "podman" in VS Code.
 	"name": "gentoo-agent",
-	"image": "localhost/gentoo-agent:20260713",
+	"image": "registry.m68k.io/gentoo-pentest:20260730",
 	// The live overlay is bind-mounted over the base's synced ::ajm and is also
 	// the editor workspace, so edits and pkgdev manifest land on the host.
 	"workspaceFolder": "/var/db/repos/ajm",
@@ -18,9 +18,13 @@
 	"runArgs": ["--userns=keep-id:uid=1000,gid=1000"],
 	"mounts": [
 		"source=gentoo-binpkgs,target=/var/cache/binpkgs,type=volume",
-		"source=gentoo-distfiles,target=/var/cache/distfiles,type=volume"
+		"source=gentoo-distfiles,target=/var/cache/distfiles,type=volume",
+		"source=${localEnv:HOME}/.claude,target=/root/.claude,type=bind,consistency=cached"
 	],
-	"remoteEnv": { "CLAUDE_CODE_OAUTH_TOKEN": "${localEnv:CLAUDE_CODE_OAUTH_TOKEN}" },
+	"remoteEnv": {
+		"CLAUDE_CODE_OAUTH_TOKEN": "${localEnv:CLAUDE_CODE_OAUTH_TOKEN}",
+		"GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN}"
+	},
 	"customizations": {
 		"vscode": {
 			"extensions": [
