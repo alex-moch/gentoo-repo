@@ -32,14 +32,18 @@ QA_PREBUILT="opt/${PN}/*"
 # entries of the shipped binaries) plus the helpers it dlopen()s at runtime
 # (libsecret for the keyring, libnotify) and the desktop-integration tools
 # the app shells out to. libcap-ng and libseccomp are pulled in by the
-# bundled `resources/virtiofsd` VM filesystem helper. Re-scanned on the
-# 1.32352.1 bump (scanelf -qn across every ELF/.node file in the bundle,
-# not just the main binary): x11-libs/libXtst and sys-apps/util-linux
-# (libuuid1) dropped — neither soname appears anywhere in the bundle any
-# more. Global shortcuts now go through org.freedesktop.portal.GlobalShortcuts
-# (confirmed via a literal string match in the main binary), already covered
-# by sys-apps/xdg-desktop-portal; Chromium's own base::Uuid replaced the
-# external libuuid dependency some releases back.
+# bundled `resources/virtiofsd` VM filesystem helper. Global shortcuts go
+# through org.freedesktop.portal.GlobalShortcuts rather than libXtst, and
+# Chromium's own base::Uuid replaced libuuid — both dropped on the
+# 1.32352.1 bump and still absent. Re-scanned on the 1.52386.3 bump
+# (scanelf -qn over all 12 ELF/.node files plus a whole-tree string sweep
+# for dlopen'd sonames, both diffed against the previous version): the
+# NEEDED set is unchanged, so RDEPEND is carried over as-is. The only new
+# soname string anywhere in the bundle is libfontconfig.so.1, an optional
+# Chromium dlopen in the same class as the libpulse/libva/libspeechd
+# probes this ebuild already declines to declare — and it is satisfied
+# transitively by gtk+/pango/cairo regardless. libunity.so.* (Ubuntu
+# launcher integration, never declared here) went away.
 RDEPEND="
 	app-accessibility/at-spi2-core
 	app-crypt/libsecret
