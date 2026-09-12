@@ -15,7 +15,7 @@ HOMEPAGE="https://ollama.com"
 # Pinned llama.cpp revision. Must match the contents of the upstream
 # ${S}/LLAMA_CPP_VERSION file; src_prepare verifies this. llama.cpp tags
 # releases as bNNNN, so the tag doubles as the archive name.
-LLAMA_CPP_COMMIT="b9888"
+LLAMA_CPP_COMMIT="b10760"
 
 if [[ ${PV} == *9999* ]]; then
 	inherit git-r3
@@ -159,10 +159,11 @@ src_prepare() {
 	# The Go binary locates its runtime payload relative to the executable
 	# (../lib/ollama). Rewrite the hardcoded "lib" segment to honour
 	# multilib so the libraries are found under $(get_libdir)/ollama.
-	# grep -Rl '"lib", "ollama"' --include '*.go'
+	# grep -Rl '"lib", "ollama"' --include '*.go' (excluding _test.go)
 	sed -i \
 		-e "s/\"lib\", \"ollama\"/\"$(get_libdir)\", \"ollama\"/g" \
-		ml/path.go discover/types.go \
+		ml/path.go discover/types.go llm/llama_binary.go \
+		x/mlxrunner/mlx/dynamic.go \
 		|| die "libdir sed failed"
 
 	if use cuda; then
