@@ -26,7 +26,7 @@ RESTRICT="test webapp? ( network-sandbox )"
 # already falls back to find_package(httplib CONFIG) when pkg-config misses,
 # so the local find_package(CONFIG) patch this ebuild used to carry is gone
 # — reconfirmed byte-identical (cmake/DetectSystemHttplib.cmake unchanged)
-# in 11.6.0; re-check this on every bump in case upstream regresses it. The
+# in 11.9.0; re-check this on every bump in case upstream regresses it. The
 # server links against system libcurl/libwebsockets/mbedtls/libzstd/libcap/
 # libdrm_amdgpu (unconditionally) and libsystemd (systemd USE flag) instead
 # of upstream's FetchContent fallback; these are compiled at both build and
@@ -37,8 +37,8 @@ RESTRICT="test webapp? ( network-sandbox )"
 # remote support) — PATCHES extends it with the mbedcrypto-slot fix. That
 # probe lived in src/cpp/cli/CMakeLists.txt through 11.5.1; 11.5.2 moved it
 # (unchanged in substance) into the root CMakeLists.txt, where it remains
-# in 11.6.0 (same content, shifted ~72 lines) — the patch applies with zero
-# fuzz; check this again on the next bump too.
+# in 11.9.0 (region byte-identical, shifted 2 further lines) — the patch
+# applies with zero fuzz; check this again on the next bump too.
 COMMON_DEPEND="
 	net-libs/libwebsockets
 	net-libs/mbedtls
