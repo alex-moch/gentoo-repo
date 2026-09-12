@@ -54,12 +54,33 @@ QA_PREBUILT="opt/${PN}/*"
 # Node.js runtime used for Codex's "computer use" tooling, and its native
 # addons) plus libraries upstream's own apt Depends: field lists that no
 # scanned binary directly NEEDS -- almost certainly dlopen()d rather than
-# link-time (libnotify for desktop notifications; dev-libs/openssl and
-# dev-libs/libusb are not referenced by any ELF NEEDED we found either,
-# but both are hard Depends: upstream and libusb lines up with the
-# bundled node-hid/serialport native modules used for device support).
+# link-time (libnotify for desktop notifications; dev-libs/libusb is not
+# referenced by any ELF NEEDED we found either, but it is a hard Depends:
+# upstream and lines up with the bundled node-hid/serialport native
+# modules used for device support).
 # dev-vcs/git is upstream's own Recommends: -- Codex's "run in your local
 # repos" feature shells out to it.
+#
+# Re-scanned on the 26.908.40834 bump (scanelf -qn over all 56 ELF files,
+# a whole-tree string sweep for dlopen'd sonames, and a diff of upstream's
+# own Depends:, all against the previous version). Three changes, all
+# tracked here:
+#   * media-gfx/graphite2 dropped -- upstream removed libgraphite2-3 from
+#     Depends: and libgraphite2 is no longer referenced anywhere in the
+#     bundle (1 file -> 0).
+#   * dev-libs/openssl:0 dropped -- upstream removed libssl3 from
+#     Depends: and the versioned libssl.so.3/libcrypto.so.3 sonames are
+#     gone. The bare "libssl"/"libcrypto"/"libcrypto.dylib" strings that
+#     remain are in the Chromium licence file, node-gyp's bundled Python,
+#     and unrelated binary string tables -- not loader references.
+#   * upstream ADDED "mesa-vulkan-drivers | vulkan-icd" to Depends:, but
+#     that is the Vulkan *ICD*, already provided here by media-libs/mesa.
+#     The loader itself is bundled (libvulkan.so.1 ships inside the
+#     payload, as in app-misc/lmstudio-bin), so media-libs/vulkan-loader
+#     is deliberately NOT added.
+# The ELF NEEDED set is otherwise unchanged: only the bundled
+# libvips-cpp.so soname moved (8.17.3 -> 8.18.6, shipped inside the
+# sharp addon) and librt.so.1 folded into glibc proper.
 #
 # The bundle also ships optional Qt5/Qt6 "shim" libraries
 # (libqt5_shim.so, libqt6_shim.so) for native dialog/theming integration
@@ -77,9 +98,7 @@ RDEPEND="
 	dev-libs/libusb
 	dev-libs/nspr
 	dev-libs/nss
-	dev-libs/openssl:0
 	dev-vcs/git
-	media-gfx/graphite2
 	media-libs/alsa-lib
 	media-libs/mesa
 	net-print/cups
