@@ -44,6 +44,13 @@ QA_PREBUILT="opt/${PN}/*"
 # probes this ebuild already declines to declare — and it is satisfied
 # transitively by gtk+/pango/cairo regardless. libunity.so.* (Ubuntu
 # launcher integration, never declared here) went away.
+#
+# Re-scanned on the 3.6556.2 bump the same way: one new hard dependency,
+# libpipewire-0.3.so.0, NEEDed by the @ant/claude-native addon
+# (claude-native-binding.node) and matching the new libpipewire-0.3-0 in
+# upstream's Depends:. Upstream's Depends: also lists libxtst6 and libuuid1
+# again, but neither soname is NEEDed by any ELF nor appears as a dlopen
+# string anywhere in the bundle, so they stay dropped.
 RDEPEND="
 	app-accessibility/at-spi2-core
 	app-crypt/libsecret
@@ -53,6 +60,7 @@ RDEPEND="
 	dev-libs/nss
 	media-libs/alsa-lib
 	media-libs/mesa
+	media-video/pipewire
 	net-print/cups
 	sys-apps/dbus
 	sys-apps/xdg-desktop-portal
