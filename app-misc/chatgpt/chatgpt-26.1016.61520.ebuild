@@ -82,6 +82,16 @@ QA_PREBUILT="opt/${PN}/*"
 # libvips-cpp.so soname moved (8.17.3 -> 8.18.6, shipped inside the
 # sharp addon) and librt.so.1 folded into glibc proper.
 #
+# Re-scanned on the 26.1016.61520 bump the same way. Two changes:
+#   * app-crypt/tpm2-tss added -- the new native/remote-control-device-key.node
+#     NEEDs libtss2-esys.so.0, libtss2-mu.so.0 and libtss2-tcti-device.so.0,
+#     matching the libtss2-* entries newly added to upstream's Depends:.
+#   * dev-libs/openssl:0 re-added -- the same addon NEEDs libcrypto.so.3 and
+#     upstream put libssl3 back in Depends:.
+# libusb is still only NEEDed by the bundled node-hid addons (already
+# declared); the libXtst.so.6 string is merely a name in playwright-core's
+# nativeDeps.js table, not a loader reference. libgraphite2 stays gone.
+#
 # The bundle also ships optional Qt5/Qt6 "shim" libraries
 # (libqt5_shim.so, libqt6_shim.so) for native dialog/theming integration
 # on Qt-based desktops. Neither Qt5 nor Qt6 itself is bundled, and neither
@@ -93,11 +103,13 @@ QA_PREBUILT="opt/${PN}/*"
 # fperms 4755 step here.
 RDEPEND="
 	app-accessibility/at-spi2-core
+	app-crypt/tpm2-tss
 	dev-libs/expat
 	dev-libs/glib:2
 	dev-libs/libusb
 	dev-libs/nspr
 	dev-libs/nss
+	dev-libs/openssl:0
 	dev-vcs/git
 	media-libs/alsa-lib
 	media-libs/mesa
